@@ -15,9 +15,9 @@ const categories = [
 ];
 
 const shopBy = [
-  { name: "ক্যাটেগরিস", href: "/shop" },
-  { name: "প্রিমিয়াম", href: "/shop?filter=premium" },
-  { name: "উৎসব", href: "/shop?filter=festival" },
+  { name: "ক্যাটেগরিস", href: "/#product-filter" },
+  { name: "প্রিমিয়াম", href: "/?category=half-silk#product-filter" },
+  { name: "উৎসব", href: "/?occasion=festival#product-filter" },
 ];
 
 const getToKnowUs = [
@@ -29,7 +29,7 @@ const getToKnowUs = [
 const supportLinks = [
   { name: "অর্ডার ট্র্যাক", href: "/order-tracking" },
   { name: "যোগাযোগ", href: "/contact" },
-  { name: "পণ্য খুঁজুন", href: "/shop" },
+  { name: "পণ্য খুঁজুন", href: "/#product-filter" },
 ];
 
 const socialLinks = [
@@ -129,7 +129,7 @@ export default function Footer() {
                 {categories.map((cat) => (
                   <li key={cat.slug}>
                     <Link
-                      href={`/shop?category=${cat.slug}`}
+                      href={`/?category=${cat.slug}#product-filter`}
                       className="footer-link"
                       style={{
                         fontFamily: "var(--font-inter), sans-serif",
@@ -319,8 +319,7 @@ export default function Footer() {
             </div>
           </div>
 
-          
-                    {/* ===== RIGHT GROUP: Get to know Us + Support ===== */}
+          {/* ===== RIGHT GROUP: Get to know Us + Support ===== */}
           <div
             className="footer-right-group"
             style={{

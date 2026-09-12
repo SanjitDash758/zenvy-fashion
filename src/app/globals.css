@@ -64,3 +64,8 @@ body {
 html {
   scroll-behavior: smooth;
 }
+
+/* Account for sticky header */
+section[id] {
+  scroll-margin-top: 120px;
+}

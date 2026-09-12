@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -48,7 +49,10 @@ const occasions = [
   { name: "🎊 উৎসব", slug: "festival" },
 ];
 
-// ===== Demo Products (20 items using your real 8 images) =====
+const PRICE_MIN = 500;
+const PRICE_MAX = 5000;
+
+// ===== Demo Products =====
 const allProducts = [
   {
     id: 1,
@@ -272,15 +276,104 @@ const allProducts = [
   },
 ];
 
-export default function ProductFilter() {
+function ProductFilterInner() {
+  const searchParams = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedAge, setSelectedAge] = useState("");
   const [selectedOccasion, setSelectedOccasion] = useState("all");
-  const [priceRange, setPriceRange] = useState(5000);
+  const [priceRange, setPriceRange] = useState(PRICE_MAX);
   const [sortBy, setSortBy] = useState("popular");
   const [openSection, setOpenSection] = useState<string | null>("category");
   const [wishlist, setWishlist] = useState<number[]>([]);
+
+  // Whether we've already run the reload check once this mount. The
+  // Performance Navigation API reflects how the *whole tab* was loaded,
+  // not each individual link click — so it must only be consulted on the
+  // very first effect run, never on every searchParams change. Checking
+  // it every time meant that after any real page refresh, every later
+  // nav-link click was wrongly treated as a "reload" and had its filter
+  // reset before it could apply.
+  const hasCheckedInitialLoad = useRef(false);
+
+  // ===== Read filters from URL query (apply on navigation, reset on reload) =====
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const categoryParam = searchParams.get("category");
+    const colorParam = searchParams.get("color");
+    const ageParam = searchParams.get("age");
+    const occasionParam = searchParams.get("occasion");
+    const maxPriceParam = searchParams.get("maxPrice");
+
+    const hasAnyParam =
+      categoryParam || colorParam || ageParam || occasionParam || maxPriceParam;
+
+    if (!hasAnyParam) return;
+
+    if (!hasCheckedInitialLoad.current) {
+      hasCheckedInitialLoad.current = true;
+
+      // Check if the page itself was loaded via a browser reload. This is
+      // only meaningful the first time — it must not gate later clicks.
+      const navEntries = performance.getEntriesByType(
+        "navigation",
+      ) as PerformanceNavigationTiming[];
+      const isReload = navEntries.length > 0 && navEntries[0].type === "reload";
+
+      if (isReload) {
+        // Reset all filters on reload
+        setSelectedCategory("all");
+        setSelectedColor("");
+        setSelectedAge("");
+        setSelectedOccasion("all");
+        setPriceRange(PRICE_MAX);
+
+        // Clean URL
+        window.history.replaceState(null, "", window.location.pathname);
+
+        return;
+      }
+    }
+
+    // Fresh navigation — apply filters
+    if (categoryParam) {
+      const exists = categories.find((c) => c.slug === categoryParam);
+      if (exists) {
+        setSelectedCategory(categoryParam);
+        setOpenSection("category");
+      }
+    }
+
+    if (colorParam) {
+      const exists = colors.find((c) => c.slug === colorParam);
+      if (exists) setSelectedColor(colorParam);
+    }
+
+    if (ageParam) {
+      const exists = ages.find((a) => a.slug === ageParam);
+      if (exists) setSelectedAge(ageParam);
+    }
+
+    if (occasionParam) {
+      const exists = occasions.find((o) => o.slug === occasionParam);
+      if (exists) setSelectedOccasion(occasionParam);
+    }
+
+    if (maxPriceParam) {
+      setPriceRange(Number(maxPriceParam));
+    }
+
+    // Smooth scroll
+    const scrollTimer = setTimeout(() => {
+      const element = document.getElementById("product-filter");
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
+
+    return () => clearTimeout(scrollTimer);
+  }, [searchParams]);
 
   const toggleWishlist = (id: number) => {
     setWishlist((prev) =>
@@ -297,10 +390,9 @@ export default function ProductFilter() {
     setSelectedColor("");
     setSelectedAge("");
     setSelectedOccasion("all");
-    setPriceRange(5000);
+    setPriceRange(PRICE_MAX);
   };
 
-  // ===== Live Filter Logic =====
   const filteredProducts = useMemo(() => {
     let result = [...allProducts];
 
@@ -318,7 +410,6 @@ export default function ProductFilter() {
     }
     result = result.filter((p) => p.price <= priceRange);
 
-    // Sort
     if (sortBy === "price-low") {
       result.sort((a, b) => a.price - b.price);
     } else if (sortBy === "price-high") {
@@ -342,24 +433,26 @@ export default function ProductFilter() {
     selectedColor ||
     selectedAge ||
     selectedOccasion !== "all" ||
-    priceRange < 5000;
+    priceRange < PRICE_MAX;
+
+  // Fix: drive the slider's fill from actual state instead of a CSS var
+  // that was never being set.
+  const sliderFillPercent =
+    ((priceRange - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
 
   return (
     <section
+      id="product-filter"
       style={{
         width: "100%",
         padding: "80px 24px",
         backgroundColor: "#FFFFFF",
+        scrollMarginTop: "120px",
       }}
     >
       <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-        {/* ===== Heading ===== */}
-        <div
-          style={{
-            textAlign: "center",
-            marginBottom: "48px",
-          }}
-        >
+        {/* Heading */}
+        <div style={{ textAlign: "center", marginBottom: "48px" }}>
           <span
             style={{
               display: "inline-block",
@@ -391,7 +484,7 @@ export default function ProductFilter() {
           </h2>
         </div>
 
-        {/* ===== 2 Columns ===== */}
+        {/* 2 Columns */}
         <div
           className="filter-container"
           style={{
@@ -401,7 +494,7 @@ export default function ProductFilter() {
             alignItems: "start",
           }}
         >
-          {/* ========== LEFT: Filter Sidebar ========== */}
+          {/* Filter Sidebar */}
           <aside
             className="filter-sidebar"
             style={{
@@ -413,7 +506,6 @@ export default function ProductFilter() {
               border: "1px solid rgba(255, 107, 138, 0.08)",
             }}
           >
-            {/* Filter Header */}
             <div
               style={{
                 display: "flex",
@@ -425,11 +517,7 @@ export default function ProductFilter() {
               }}
             >
               <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
                 <FiSearch size={16} style={{ color: "#FF6B8A" }} />
                 <h3
@@ -469,7 +557,7 @@ export default function ProductFilter() {
               )}
             </div>
 
-            {/* ===== Filter: Category ===== */}
+            {/* Category Filter */}
             <FilterSection
               title="ক্যাটেগরি"
               isOpen={openSection === "category"}
@@ -481,11 +569,7 @@ export default function ProductFilter() {
               }
             >
               <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "4px",
-                }}
+                style={{ display: "flex", flexDirection: "column", gap: "4px" }}
               >
                 {categories.map((cat) => (
                   <label
@@ -528,7 +612,7 @@ export default function ProductFilter() {
               </div>
             </FilterSection>
 
-            {/* ===== Filter: Color ===== */}
+            {/* Color Filter */}
             <FilterSection
               title="রঙ"
               isOpen={openSection === "color"}
@@ -539,13 +623,7 @@ export default function ProductFilter() {
                   : undefined
               }
             >
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "8px",
-                }}
-              >
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 {colors.map((color) => (
                   <button
                     key={color.slug}
@@ -581,7 +659,7 @@ export default function ProductFilter() {
               </div>
             </FilterSection>
 
-            {/* ===== Filter: Age ===== */}
+            {/* Age Filter */}
             <FilterSection
               title="বয়স"
               isOpen={openSection === "age"}
@@ -628,7 +706,7 @@ export default function ProductFilter() {
               </div>
             </FilterSection>
 
-            {/* ===== Filter: Occasion ===== */}
+            {/* Occasion Filter */}
             <FilterSection
               title="অনুষ্ঠান"
               isOpen={openSection === "occasion"}
@@ -640,11 +718,7 @@ export default function ProductFilter() {
               }
             >
               <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "4px",
-                }}
+                style={{ display: "flex", flexDirection: "column", gap: "4px" }}
               >
                 {occasions.map((occ) => (
                   <label
@@ -687,7 +761,7 @@ export default function ProductFilter() {
               </div>
             </FilterSection>
 
-            {/* ===== Filter: Price ===== */}
+            {/* Price Filter */}
             <FilterSection
               title="দাম"
               isOpen={openSection === "price"}
@@ -720,21 +794,28 @@ export default function ProductFilter() {
                 </div>
                 <input
                   type="range"
-                  min="500"
-                  max="5000"
+                  min={PRICE_MIN}
+                  max={PRICE_MAX}
                   step="100"
                   value={priceRange}
                   onChange={(e) => setPriceRange(Number(e.target.value))}
                   className="price-slider"
-                  style={{ width: "100%", accentColor: "#FF6B8A" }}
+                  style={
+                    {
+                      width: "100%",
+                      accentColor: "#FF6B8A",
+                      // Fix: this custom property drives the gradient fill
+                      // in the .price-slider rule below — previously unset.
+                      "--value": `${sliderFillPercent}%`,
+                    } as React.CSSProperties
+                  }
                 />
               </div>
             </FilterSection>
           </aside>
 
-          {/* ========== RIGHT: Filtered Products ========== */}
+          {/* Filtered Products */}
           <div>
-            {/* Result Header */}
             <div
               style={{
                 display: "flex",
@@ -787,7 +868,6 @@ export default function ProductFilter() {
               </select>
             </div>
 
-            {/* Empty State */}
             {filteredProducts.length === 0 && (
               <div
                 style={{
@@ -840,7 +920,6 @@ export default function ProductFilter() {
               </div>
             )}
 
-            {/* Products Grid */}
             {filteredProducts.length > 0 && (
               <div
                 className="filtered-products-grid"
@@ -884,7 +963,7 @@ export default function ProductFilter() {
                               transition: "transform 0.6s ease",
                             }}
                             className="filter-product-image"
-                            sizes="(max-width: 640px) 50vw, 33vw"
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           />
                         </Link>
 
@@ -996,7 +1075,6 @@ export default function ProductFilter() {
         </div>
       </div>
 
-      {/* ===== CSS ===== */}
       <style jsx>{`
         .filter-product-card:hover .filter-product-image {
           transform: scale(1.08);
@@ -1110,13 +1188,7 @@ function FilterSection({
           color: "#1A1A1A",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           {title}
           {badge && (
             <span
@@ -1154,5 +1226,15 @@ function FilterSection({
         {children}
       </div>
     </div>
+  );
+}
+
+// Exported wrapper — useSearchParams() requires a Suspense boundary in the
+// App Router, or Next.js throws during build/static rendering.
+export default function ProductFilter() {
+  return (
+    <Suspense fallback={null}>
+      <ProductFilterInner />
+    </Suspense>
   );
 }
