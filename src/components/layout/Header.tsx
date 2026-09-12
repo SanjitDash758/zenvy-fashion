@@ -16,6 +16,12 @@ import {
   FiUserPlus,
 } from "react-icons/fi";
 
+// Fix: dropdown hrefs previously combined a query string AND a hash
+// (e.g. "/?category=katan#product-filter"). Next.js's <Link> races the
+// hash-scroll against the query-driven re-render, which swallowed the
+// filter update on the first click and only worked on the second. The
+// ProductFilter component already scrollIntoView()s itself once it sees
+// a new category param, so the hash fragment isn't needed here at all.
 const navLinks = [
   { name: "Home", href: "/", icon: FiHome },
   {
@@ -23,12 +29,12 @@ const navLinks = [
     href: "/#product-filter",
     icon: FiShoppingBag,
     dropdown: [
-      { name: "কাতান", href: "/?category=katan#product-filter" },
-      { name: "জামদানী", href: "/?category=jamdani#product-filter" },
-      { name: "চাঁদনী সিল্ক", href: "/?category=chandni-silk#product-filter" },
-      { name: "জাপানি সিল্ক", href: "/?category=japanese-silk#product-filter" },
-      { name: "সুতির শাড়ী", href: "/?category=cotton-saree#product-filter" },
-      { name: "হাফ সিল্ক", href: "/?category=half-silk#product-filter" },
+      { name: "কাতান", href: "/?category=katan" },
+      { name: "জামদানী", href: "/?category=jamdani" },
+      { name: "চাঁদনী সিল্ক", href: "/?category=chandni-silk" },
+      { name: "জাপানি সিল্ক", href: "/?category=japanese-silk" },
+      { name: "সুতির শাড়ী", href: "/?category=cotton-saree" },
+      { name: "হাফ সিল্ক", href: "/?category=half-silk" },
     ],
   },
   { name: "About", href: "/about", icon: FiInfo },

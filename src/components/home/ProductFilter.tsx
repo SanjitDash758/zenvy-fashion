@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -278,6 +278,8 @@ const allProducts = [
 
 function ProductFilterInner() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedAge, setSelectedAge] = useState("");
@@ -385,12 +387,58 @@ function ProductFilterInner() {
     setOpenSection(openSection === section ? null : section);
   };
 
+  // Keeps the URL in sync whenever a filter is changed from the UI, so the
+  // address bar always reflects what's selected. "all" / "" / null clears
+  // that param instead of writing it.
+  const updateUrlParams = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === "" || value === "all") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
+    });
+  };
+
+  const handleCategoryChange = (slug: string) => {
+    setSelectedCategory(slug);
+    updateUrlParams({ category: slug });
+  };
+
+  const handleColorChange = (slug: string) => {
+    const next = selectedColor === slug ? "" : slug;
+    setSelectedColor(next);
+    updateUrlParams({ color: next || null });
+  };
+
+  const handleAgeChange = (slug: string) => {
+    const next = selectedAge === slug ? "" : slug;
+    setSelectedAge(next);
+    updateUrlParams({ age: next || null });
+  };
+
+  const handleOccasionChange = (slug: string) => {
+    setSelectedOccasion(slug);
+    updateUrlParams({ occasion: slug });
+  };
+
+  const handlePriceChange = (value: number) => {
+    setPriceRange(value);
+    updateUrlParams({ maxPrice: value === PRICE_MAX ? null : String(value) });
+  };
+
   const resetFilters = () => {
     setSelectedCategory("all");
     setSelectedColor("");
     setSelectedAge("");
     setSelectedOccasion("all");
     setPriceRange(PRICE_MAX);
+    router.replace(pathname, { scroll: false });
   };
 
   const filteredProducts = useMemo(() => {
@@ -598,7 +646,7 @@ function ProductFilterInner() {
                       name="category"
                       value={cat.slug}
                       checked={selectedCategory === cat.slug}
-                      onChange={() => setSelectedCategory(cat.slug)}
+                      onChange={() => handleCategoryChange(cat.slug)}
                       style={{
                         accentColor: "#FF6B8A",
                         cursor: "pointer",
@@ -627,11 +675,7 @@ function ProductFilterInner() {
                 {colors.map((color) => (
                   <button
                     key={color.slug}
-                    onClick={() =>
-                      setSelectedColor(
-                        selectedColor === color.slug ? "" : color.slug,
-                      )
-                    }
+                    onClick={() => handleColorChange(color.slug)}
                     aria-label={color.name}
                     title={color.name}
                     style={{
@@ -680,9 +724,7 @@ function ProductFilterInner() {
                 {ages.map((age) => (
                   <button
                     key={age.slug}
-                    onClick={() =>
-                      setSelectedAge(selectedAge === age.slug ? "" : age.slug)
-                    }
+                    onClick={() => handleAgeChange(age.slug)}
                     style={{
                       padding: "7px 4px",
                       fontFamily: "var(--font-inter), sans-serif",
@@ -747,7 +789,7 @@ function ProductFilterInner() {
                       name="occasion"
                       value={occ.slug}
                       checked={selectedOccasion === occ.slug}
-                      onChange={() => setSelectedOccasion(occ.slug)}
+                      onChange={() => handleOccasionChange(occ.slug)}
                       style={{
                         accentColor: "#FF6B8A",
                         cursor: "pointer",
@@ -798,7 +840,7 @@ function ProductFilterInner() {
                   max={PRICE_MAX}
                   step="100"
                   value={priceRange}
-                  onChange={(e) => setPriceRange(Number(e.target.value))}
+                  onChange={(e) => handlePriceChange(Number(e.target.value))}
                   className="price-slider"
                   style={
                     {
