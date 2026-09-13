@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, Suspense } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -12,16 +12,21 @@ import {
   FiShoppingBag,
   FiStar,
 } from "react-icons/fi";
+import { WooProduct } from "@/lib/api";
 
-// ===== Filter Data =====
+interface ProductFilterProps {
+  products: WooProduct[];
+}
+
+// ===== Static Filter Data (Categories থেকে API-তে যাবে, কিন্তু আপাতত static) =====
 const categories = [
   { name: "সব", slug: "all" },
   { name: "কাতান", slug: "katan" },
   { name: "জামদানী", slug: "jamdani" },
-  { name: "চাঁদনী সিল্ক", slug: "chandni-silk" },
-  { name: "জাপানি সিল্ক", slug: "japanese-silk" },
-  { name: "সুতির শাড়ী", slug: "cotton-saree" },
+  { name: "জাপানি সিল্ক", slug: "japani-silk" },
+  { name: "সুতি শাড়ী", slug: "suti" },
   { name: "হাফ সিল্ক", slug: "half-silk" },
+  { name: "কাঞ্জিভরম", slug: "kanchibaram" },
 ];
 
 const colors = [
@@ -34,11 +39,11 @@ const colors = [
 ];
 
 const ages = [
-  { name: "২-৩ বছর", slug: "2-3" },
-  { name: "৪-৫ বছর", slug: "4-5" },
-  { name: "৬-৭ বছর", slug: "6-7" },
-  { name: "৮-১০ বছর", slug: "8-10" },
-  { name: "১১-১৫ বছর", slug: "11-15" },
+  { name: "১-৩ বছর", slug: "1-3" },
+  { name: "৩-৫ বছর", slug: "3-5" },
+  { name: "৫-১০ বছর", slug: "5-10" },
+  { name: "১০-১২ বছর", slug: "10-12" },
+  { name: "১২-১৫ বছর", slug: "12-15" },
 ];
 
 const occasions = [
@@ -49,256 +54,18 @@ const occasions = [
   { name: "🎊 উৎসব", slug: "festival" },
 ];
 
-const PRICE_MIN = 500;
-const PRICE_MAX = 5000;
-
-// ===== Demo Products =====
-const allProducts = [
-  {
-    id: 1,
-    name: "কাতান বেবি শাড়ি",
-    category: "katan",
-    occasion: "wedding",
-    color: "red",
-    age: "2-3",
-    price: 1200,
-    rating: 5,
-    image: "/images/4PTkrKMT.jpg",
-  },
-  {
-    id: 2,
-    name: "জামদানী বেবি শাড়ি",
-    category: "jamdani",
-    occasion: "birthday",
-    color: "pink",
-    age: "4-5",
-    price: 1500,
-    rating: 5,
-    image: "/images/7kGtew0u.jpg",
-  },
-  {
-    id: 3,
-    name: "চাঁদনী সিল্ক শাড়ি",
-    category: "chandni-silk",
-    occasion: "festival",
-    color: "yellow",
-    age: "6-7",
-    price: 1800,
-    rating: 4,
-    image: "/images/7OgJOQJ9.jpg",
-  },
-  {
-    id: 4,
-    name: "সুতির শাড়ি",
-    category: "cotton-saree",
-    occasion: "birthday",
-    color: "blue",
-    age: "2-3",
-    price: 1000,
-    rating: 5,
-    image: "/images/8Z05-xXL.jpg",
-  },
-  {
-    id: 5,
-    name: "ডিজিটাল প্রিন্ট শাড়ি",
-    category: "chandni-silk",
-    occasion: "holud",
-    color: "yellow",
-    age: "4-5",
-    price: 1300,
-    rating: 4,
-    image: "/images/9YjHQ_72.jpg",
-  },
-  {
-    id: 6,
-    name: "হাফ সিল্ক শাড়ি",
-    category: "half-silk",
-    occasion: "wedding",
-    color: "red",
-    age: "8-10",
-    price: 2000,
-    rating: 5,
-    image: "/images/Half-Silk.jpg",
-  },
-  {
-    id: 7,
-    name: "এথনিক বেবি শাড়ি",
-    category: "katan",
-    occasion: "holud",
-    color: "pink",
-    age: "6-7",
-    price: 1400,
-    rating: 5,
-    image: "/images/eUwPWIQn.jpg",
-  },
-  {
-    id: 8,
-    name: "ট্র্যাডিশনাল শাড়ি",
-    category: "jamdani",
-    occasion: "wedding",
-    color: "red",
-    age: "11-15",
-    price: 1600,
-    rating: 4,
-    image: "/images/FZqSB4mP.jpg",
-  },
-  {
-    id: 9,
-    name: "প্রিমিয়াম কাতান শাড়ি",
-    category: "katan",
-    occasion: "festival",
-    color: "blue",
-    age: "4-5",
-    price: 2200,
-    rating: 5,
-    image: "/images/4PTkrKMT.jpg",
-  },
-  {
-    id: 10,
-    name: "ডিজাইনার জামদানী",
-    category: "jamdani",
-    occasion: "birthday",
-    color: "green",
-    age: "2-3",
-    price: 1700,
-    rating: 5,
-    image: "/images/7kGtew0u.jpg",
-  },
-  {
-    id: 11,
-    name: "রয়্যাল চাঁদনী শাড়ি",
-    category: "chandni-silk",
-    occasion: "wedding",
-    color: "white",
-    age: "8-10",
-    price: 2500,
-    rating: 5,
-    image: "/images/7OgJOQJ9.jpg",
-  },
-  {
-    id: 12,
-    name: "সফট কটন শাড়ি",
-    category: "cotton-saree",
-    occasion: "birthday",
-    color: "pink",
-    age: "4-5",
-    price: 1100,
-    rating: 4,
-    image: "/images/8Z05-xXL.jpg",
-  },
-  {
-    id: 13,
-    name: "রঙিন প্রিন্ট শাড়ি",
-    category: "chandni-silk",
-    occasion: "festival",
-    color: "green",
-    age: "6-7",
-    price: 1500,
-    rating: 5,
-    image: "/images/9YjHQ_72.jpg",
-  },
-  {
-    id: 14,
-    name: "ক্লাসিক হাফ সিল্ক",
-    category: "half-silk",
-    occasion: "holud",
-    color: "yellow",
-    age: "11-15",
-    price: 1900,
-    rating: 5,
-    image: "/images/Half-Silk.jpg",
-  },
-  {
-    id: 15,
-    name: "ট্র্যাডিশনাল কাতান",
-    category: "katan",
-    occasion: "wedding",
-    color: "red",
-    age: "4-5",
-    price: 1800,
-    rating: 5,
-    image: "/images/eUwPWIQn.jpg",
-  },
-  {
-    id: 16,
-    name: "এলিগেন্ট জামদানী",
-    category: "jamdani",
-    occasion: "holud",
-    color: "pink",
-    age: "6-7",
-    price: 2100,
-    rating: 5,
-    image: "/images/FZqSB4mP.jpg",
-  },
-  {
-    id: 17,
-    name: "বেবি চাঁদনী শাড়ি",
-    category: "chandni-silk",
-    occasion: "birthday",
-    color: "blue",
-    age: "2-3",
-    price: 1400,
-    rating: 4,
-    image: "/images/7OgJOQJ9.jpg",
-  },
-  {
-    id: 18,
-    name: "সুতির ডেইলি শাড়ি",
-    category: "cotton-saree",
-    occasion: "festival",
-    color: "yellow",
-    age: "8-10",
-    price: 900,
-    rating: 5,
-    image: "/images/8Z05-xXL.jpg",
-  },
-  {
-    id: 19,
-    name: "প্রিমিয়াম হাফ সিল্ক",
-    category: "half-silk",
-    occasion: "wedding",
-    color: "red",
-    age: "11-15",
-    price: 2800,
-    rating: 5,
-    image: "/images/Half-Silk.jpg",
-  },
-  {
-    id: 20,
-    name: "ফেস্টিভ কাতান",
-    category: "katan",
-    occasion: "festival",
-    color: "green",
-    age: "4-5",
-    price: 1600,
-    rating: 5,
-    image: "/images/eUwPWIQn.jpg",
-  },
-];
-
-function ProductFilterInner() {
+export default function ProductFilter({ products }: ProductFilterProps) {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedAge, setSelectedAge] = useState("");
   const [selectedOccasion, setSelectedOccasion] = useState("all");
-  const [priceRange, setPriceRange] = useState(PRICE_MAX);
+  const [priceRange, setPriceRange] = useState(5000);
   const [sortBy, setSortBy] = useState("popular");
   const [openSection, setOpenSection] = useState<string | null>("category");
   const [wishlist, setWishlist] = useState<number[]>([]);
 
-  // Whether we've already run the reload check once this mount. The
-  // Performance Navigation API reflects how the *whole tab* was loaded,
-  // not each individual link click — so it must only be consulted on the
-  // very first effect run, never on every searchParams change. Checking
-  // it every time meant that after any real page refresh, every later
-  // nav-link click was wrongly treated as a "reload" and had its filter
-  // reset before it could apply.
-  const hasCheckedInitialLoad = useRef(false);
-
-  // ===== Read filters from URL query (apply on navigation, reset on reload) =====
+  // ===== Read filters from URL query =====
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -313,29 +80,21 @@ function ProductFilterInner() {
 
     if (!hasAnyParam) return;
 
-    if (!hasCheckedInitialLoad.current) {
-      hasCheckedInitialLoad.current = true;
+    // Check if this is a page reload using Performance Navigation API
+    const navEntries = performance.getEntriesByType(
+      "navigation",
+    ) as PerformanceNavigationTiming[];
+    const isReload = navEntries.length > 0 && navEntries[0].type === "reload";
 
-      // Check if the page itself was loaded via a browser reload. This is
-      // only meaningful the first time — it must not gate later clicks.
-      const navEntries = performance.getEntriesByType(
-        "navigation",
-      ) as PerformanceNavigationTiming[];
-      const isReload = navEntries.length > 0 && navEntries[0].type === "reload";
-
-      if (isReload) {
-        // Reset all filters on reload
-        setSelectedCategory("all");
-        setSelectedColor("");
-        setSelectedAge("");
-        setSelectedOccasion("all");
-        setPriceRange(PRICE_MAX);
-
-        // Clean URL
-        window.history.replaceState(null, "", window.location.pathname);
-
-        return;
-      }
+    if (isReload) {
+      setSelectedCategory("all");
+      setSelectedColor("");
+      setSelectedAge("");
+      setSelectedOccasion("all");
+      setPriceRange(5000);
+      window.history.replaceState(null, "", window.location.pathname);
+      sessionStorage.removeItem("lastAppliedUrl");
+      return;
     }
 
     // Fresh navigation — apply filters
@@ -366,7 +125,8 @@ function ProductFilterInner() {
       setPriceRange(Number(maxPriceParam));
     }
 
-    // Smooth scroll
+    sessionStorage.setItem("lastAppliedUrl", window.location.href);
+
     const scrollTimer = setTimeout(() => {
       const element = document.getElementById("product-filter");
       if (element) {
@@ -387,87 +147,74 @@ function ProductFilterInner() {
     setOpenSection(openSection === section ? null : section);
   };
 
-  // Keeps the URL in sync whenever a filter is changed from the UI, so the
-  // address bar always reflects what's selected. "all" / "" / null clears
-  // that param instead of writing it.
-  const updateUrlParams = (updates: Record<string, string | null>) => {
-    const params = new URLSearchParams(searchParams.toString());
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value === null || value === "" || value === "all") {
-        params.delete(key);
-      } else {
-        params.set(key, value);
-      }
-    });
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, {
-      scroll: false,
-    });
-  };
-
-  const handleCategoryChange = (slug: string) => {
-    setSelectedCategory(slug);
-    updateUrlParams({ category: slug });
-  };
-
-  const handleColorChange = (slug: string) => {
-    const next = selectedColor === slug ? "" : slug;
-    setSelectedColor(next);
-    updateUrlParams({ color: next || null });
-  };
-
-  const handleAgeChange = (slug: string) => {
-    const next = selectedAge === slug ? "" : slug;
-    setSelectedAge(next);
-    updateUrlParams({ age: next || null });
-  };
-
-  const handleOccasionChange = (slug: string) => {
-    setSelectedOccasion(slug);
-    updateUrlParams({ occasion: slug });
-  };
-
-  const handlePriceChange = (value: number) => {
-    setPriceRange(value);
-    updateUrlParams({ maxPrice: value === PRICE_MAX ? null : String(value) });
-  };
-
   const resetFilters = () => {
     setSelectedCategory("all");
     setSelectedColor("");
     setSelectedAge("");
     setSelectedOccasion("all");
-    setPriceRange(PRICE_MAX);
-    router.replace(pathname, { scroll: false });
+    setPriceRange(5000);
   };
 
+  // ===== Live Filter Logic (API data) =====
   const filteredProducts = useMemo(() => {
-    let result = [...allProducts];
+    let result = [...products];
 
+    // Filter by category
     if (selectedCategory !== "all") {
-      result = result.filter((p) => p.category === selectedCategory);
+      result = result.filter((p) =>
+        p.categories.some((cat) => cat.slug === selectedCategory),
+      );
     }
-    if (selectedColor) {
-      result = result.filter((p) => p.color === selectedColor);
-    }
-    if (selectedAge) {
-      result = result.filter((p) => p.age === selectedAge);
-    }
-    if (selectedOccasion !== "all") {
-      result = result.filter((p) => p.occasion === selectedOccasion);
-    }
-    result = result.filter((p) => p.price <= priceRange);
 
+    // Filter by occasion (tags)
+    if (selectedOccasion !== "all") {
+      result = result.filter((p) =>
+        p.tags.some((tag) => tag.slug === selectedOccasion),
+      );
+    }
+
+    // Filter by age (attributes)
+    if (selectedAge) {
+      const ageLabel = ages.find((a) => a.slug === selectedAge)?.name || "";
+      result = result.filter((p) =>
+        p.attributes.some(
+          (attr) =>
+            attr.name === "Age" && attr.options.some((opt) => opt === ageLabel),
+        ),
+      );
+    }
+
+    // Filter by color (currently no color attribute, so skip if empty)
+    if (selectedColor) {
+      result = result.filter((p) =>
+        p.attributes.some(
+          (attr) =>
+            attr.name === "Color" &&
+            attr.options.some((opt) => {
+              const colorObj = colors.find((c) => c.slug === selectedColor);
+              return colorObj && opt === colorObj.name;
+            }),
+        ),
+      );
+    }
+
+    // Filter by price
+    result = result.filter((p) => parseFloat(p.price) <= priceRange);
+
+    // Sort
     if (sortBy === "price-low") {
-      result.sort((a, b) => a.price - b.price);
+      result.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
     } else if (sortBy === "price-high") {
-      result.sort((a, b) => b.price - a.price);
+      result.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
     } else if (sortBy === "popular") {
-      result.sort((a, b) => b.rating - a.rating);
+      result.sort(
+        (a, b) => parseFloat(b.average_rating) - parseFloat(a.average_rating),
+      );
     }
 
     return result;
   }, [
+    products,
     selectedCategory,
     selectedColor,
     selectedAge,
@@ -481,12 +228,7 @@ function ProductFilterInner() {
     selectedColor ||
     selectedAge ||
     selectedOccasion !== "all" ||
-    priceRange < PRICE_MAX;
-
-  // Fix: drive the slider's fill from actual state instead of a CSS var
-  // that was never being set.
-  const sliderFillPercent =
-    ((priceRange - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
+    priceRange < 5000;
 
   return (
     <section
@@ -646,7 +388,7 @@ function ProductFilterInner() {
                       name="category"
                       value={cat.slug}
                       checked={selectedCategory === cat.slug}
-                      onChange={() => handleCategoryChange(cat.slug)}
+                      onChange={() => setSelectedCategory(cat.slug)}
                       style={{
                         accentColor: "#FF6B8A",
                         cursor: "pointer",
@@ -675,7 +417,11 @@ function ProductFilterInner() {
                 {colors.map((color) => (
                   <button
                     key={color.slug}
-                    onClick={() => handleColorChange(color.slug)}
+                    onClick={() =>
+                      setSelectedColor(
+                        selectedColor === color.slug ? "" : color.slug,
+                      )
+                    }
                     aria-label={color.name}
                     title={color.name}
                     style={{
@@ -724,7 +470,9 @@ function ProductFilterInner() {
                 {ages.map((age) => (
                   <button
                     key={age.slug}
-                    onClick={() => handleAgeChange(age.slug)}
+                    onClick={() =>
+                      setSelectedAge(selectedAge === age.slug ? "" : age.slug)
+                    }
                     style={{
                       padding: "7px 4px",
                       fontFamily: "var(--font-inter), sans-serif",
@@ -789,7 +537,7 @@ function ProductFilterInner() {
                       name="occasion"
                       value={occ.slug}
                       checked={selectedOccasion === occ.slug}
-                      onChange={() => handleOccasionChange(occ.slug)}
+                      onChange={() => setSelectedOccasion(occ.slug)}
                       style={{
                         accentColor: "#FF6B8A",
                         cursor: "pointer",
@@ -836,21 +584,13 @@ function ProductFilterInner() {
                 </div>
                 <input
                   type="range"
-                  min={PRICE_MIN}
-                  max={PRICE_MAX}
+                  min="500"
+                  max="5000"
                   step="100"
                   value={priceRange}
-                  onChange={(e) => handlePriceChange(Number(e.target.value))}
+                  onChange={(e) => setPriceRange(Number(e.target.value))}
                   className="price-slider"
-                  style={
-                    {
-                      width: "100%",
-                      accentColor: "#FF6B8A",
-                      // Fix: this custom property drives the gradient fill
-                      // in the .price-slider rule below — previously unset.
-                      "--value": `${sliderFillPercent}%`,
-                    } as React.CSSProperties
-                  }
+                  style={{ width: "100%", accentColor: "#FF6B8A" }}
                 />
               </div>
             </FilterSection>
@@ -973,6 +713,10 @@ function ProductFilterInner() {
               >
                 {filteredProducts.map((product) => {
                   const isWishlisted = wishlist.includes(product.id);
+                  const productImage =
+                    product.images[0]?.src || "/images/placeholder.jpg";
+                  const productPrice = parseFloat(product.price) || 0;
+
                   return (
                     <div
                       key={product.id}
@@ -995,9 +739,9 @@ function ProductFilterInner() {
                           backgroundColor: "#F5EFE6",
                         }}
                       >
-                        <Link href={`/product/${product.id}`}>
+                        <Link href={`/product/${product.slug}`}>
                           <Image
-                            src={product.image}
+                            src={productImage}
                             alt={product.name}
                             fill
                             style={{
@@ -1005,7 +749,8 @@ function ProductFilterInner() {
                               transition: "transform 0.6s ease",
                             }}
                             className="filter-product-image"
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            sizes="(max-width: 640px) 50vw, 33vw"
+                            unoptimized
                           />
                         </Link>
 
@@ -1065,13 +810,27 @@ function ProductFilterInner() {
                       </div>
 
                       <div style={{ padding: "12px 14px 14px" }}>
+                        {product.categories[0] && (
+                          <span
+                            style={{
+                              fontFamily: "var(--font-inter), sans-serif",
+                              fontSize: "10px",
+                              fontWeight: 600,
+                              color: "#FF6B8A",
+                              letterSpacing: "1.2px",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            {product.categories[0].name}
+                          </span>
+                        )}
                         <h4
                           style={{
                             fontFamily: "var(--font-cormorant), serif",
                             fontSize: "16px",
                             fontWeight: 600,
                             color: "#1A1A1A",
-                            margin: "0 0 6px",
+                            margin: "6px 0 6px",
                             lineHeight: 1.3,
                           }}
                         >
@@ -1089,9 +848,17 @@ function ProductFilterInner() {
                             <FiStar
                               key={i}
                               size={10}
-                              fill={i < product.rating ? "#FFB800" : "none"}
+                              fill={
+                                i <
+                                Math.round(parseFloat(product.average_rating))
+                                  ? "#FFB800"
+                                  : "none"
+                              }
                               stroke={
-                                i < product.rating ? "#FFB800" : "#CCCCCC"
+                                i <
+                                Math.round(parseFloat(product.average_rating))
+                                  ? "#FFB800"
+                                  : "#CCCCCC"
                               }
                               strokeWidth={2}
                             />
@@ -1105,7 +872,7 @@ function ProductFilterInner() {
                             color: "#1A1A1A",
                           }}
                         >
-                          ৳{product.price.toLocaleString("bn-BD")}
+                          ৳{productPrice.toLocaleString("bn-BD")}
                         </span>
                       </div>
                     </div>
@@ -1268,15 +1035,5 @@ function FilterSection({
         {children}
       </div>
     </div>
-  );
-}
-
-// Exported wrapper — useSearchParams() requires a Suspense boundary in the
-// App Router, or Next.js throws during build/static rendering.
-export default function ProductFilter() {
-  return (
-    <Suspense fallback={null}>
-      <ProductFilterInner />
-    </Suspense>
   );
 }

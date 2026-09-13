@@ -4,106 +4,47 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { FiHeart, FiShoppingBag, FiArrowRight, FiStar } from "react-icons/fi";
+import { WooProduct } from "@/lib/api";
 
-const products = [
-  {
-    id: 1,
-    name: "কাতান বেবি শাড়ি",
-    category: "কাতান",
-    price: 1200,
-    oldPrice: 1500,
-    rating: 5,
-    reviews: 24,
-    image: "/images/4PTkrKMT.jpg",
-    badge: "Best Seller",
-  },
-  {
-    id: 2,
-    name: "জামদানী বেবি শাড়ি",
-    category: "জামদানী",
-    price: 1500,
-    oldPrice: 1800,
-    rating: 5,
-    reviews: 18,
-    image: "/images/7kGtew0u.jpg",
-    badge: "New",
-  },
-  {
-    id: 3,
-    name: "চাঁদনী সিল্ক শাড়ি",
-    category: "চাঁদনী সিল্ক",
-    price: 1800,
-    oldPrice: null,
-    rating: 4,
-    reviews: 12,
-    image: "/images/7OgJOQJ9.jpg",
-    badge: null,
-  },
-  {
-    id: 4,
-    name: "সুতির শাড়ি",
-    category: "সুতির শাড়ী",
-    price: 1000,
-    oldPrice: 1200,
-    rating: 5,
-    reviews: 32,
-    image: "/images/8Z05-xXL.jpg",
-    badge: "Sale",
-  },
-  {
-    id: 5,
-    name: "ডিজিটাল প্রিন্ট শাড়ি",
-    category: "ডিজিটাল প্রিন্ট",
-    price: 1300,
-    oldPrice: null,
-    rating: 4,
-    reviews: 8,
-    image: "/images/9YjHQ_72.jpg",
-    badge: null,
-  },
-  {
-    id: 6,
-    name: "হাফ সিল্ক শাড়ি",
-    category: "হাফ সিল্ক",
-    price: 2000,
-    oldPrice: 2400,
-    rating: 5,
-    reviews: 15,
-    image: "/images/Half-Silk.jpg",
-    badge: "Premium",
-  },
-  {
-    id: 7,
-    name: "এথনিক বেবি শাড়ি",
-    category: "কাতান",
-    price: 1400,
-    oldPrice: null,
-    rating: 5,
-    reviews: 20,
-    image: "/images/eUwPWIQn.jpg",
-    badge: null,
-  },
-  {
-    id: 8,
-    name: "ট্র্যাডিশনাল শাড়ি",
-    category: "জামদানী",
-    price: 1600,
-    oldPrice: 1900,
-    rating: 4,
-    reviews: 10,
-    image: "/images/FZqSB4mP.jpg",
-    badge: "Sale",
-  },
-];
+interface FeaturedProductsProps {
+  products: WooProduct[];
+}
 
-export default function FeaturedProducts() {
+export default function FeaturedProducts({ products }: FeaturedProductsProps) {
   const [wishlist, setWishlist] = useState<number[]>([]);
 
   const toggleWishlist = (id: number) => {
     setWishlist((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
+
+  // If no products, show empty state
+  if (products.length === 0) {
+    return (
+      <section
+        style={{
+          width: "100%",
+          padding: "80px 24px",
+          backgroundColor: "#FFF8F9",
+        }}
+      >
+        <div
+          style={{ maxWidth: "1400px", margin: "0 auto", textAlign: "center" }}
+        >
+          <h2
+            style={{
+              fontFamily: "var(--font-cormorant), serif",
+              fontSize: "32px",
+              color: "#1A1A1A",
+            }}
+          >
+            শীঘ্রই আসছে...
+          </h2>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section
@@ -113,19 +54,9 @@ export default function FeaturedProducts() {
         backgroundColor: "#FFF8F9",
       }}
     >
-      <div
-        style={{
-          maxWidth: "1400px",
-          margin: "0 auto",
-        }}
-      >
+      <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
         {/* ===== Heading ===== */}
-        <div
-          style={{
-            textAlign: "center",
-            marginBottom: "56px",
-          }}
-        >
+        <div style={{ textAlign: "center", marginBottom: "56px" }}>
           <span
             style={{
               display: "inline-block",
@@ -138,7 +69,7 @@ export default function FeaturedProducts() {
               marginBottom: "12px",
             }}
           >
-            Best Sellers
+            Our Collection
           </span>
           <h2
             style={{
@@ -152,15 +83,9 @@ export default function FeaturedProducts() {
             }}
           >
             আমাদের{" "}
-            <span
-              style={{
-                color: "#FF6B8A",
-                fontStyle: "italic",
-              }}
-            >
-              জনপ্রিয়
-            </span>{" "}
-            শাড়ি
+            <span style={{ color: "#FF6B8A", fontStyle: "italic" }}>
+              কালেকশন
+            </span>
           </h2>
           <p
             style={{
@@ -190,11 +115,16 @@ export default function FeaturedProducts() {
         >
           {products.map((product) => {
             const isWishlisted = wishlist.includes(product.id);
-            const discount = product.oldPrice
-              ? Math.round(
-                  ((product.oldPrice - product.price) / product.oldPrice) * 100
-                )
-              : 0;
+            const productImage =
+              product.images[0]?.src || "/images/placeholder.jpg";
+            const productPrice = parseFloat(product.price) || 0;
+            const regularPrice = parseFloat(product.regular_price) || 0;
+            const discount =
+              regularPrice > 0 && regularPrice > productPrice
+                ? Math.round(
+                    ((regularPrice - productPrice) / regularPrice) * 100,
+                  )
+                : 0;
 
             return (
               <div
@@ -231,9 +161,9 @@ export default function FeaturedProducts() {
                     backgroundColor: "#F5EFE6",
                   }}
                 >
-                  <Link href={`/product/${product.id}`}>
+                  <Link href={`/product/${product.slug}`}>
                     <Image
-                      src={product.image}
+                      src={productImage}
                       alt={product.name}
                       fill
                       style={{
@@ -243,41 +173,33 @@ export default function FeaturedProducts() {
                       }}
                       className="product-image"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      unoptimized
                     />
                   </Link>
 
-                  {/* Badge — top left */}
-                  {product.badge && (
+                  {/* Discount tag */}
+                  {discount > 0 && (
                     <div
                       style={{
                         position: "absolute",
-                        top: "12px",
+                        bottom: "12px",
                         left: "12px",
-                        padding: "6px 12px",
-                        backgroundColor:
-                          product.badge === "Sale"
-                            ? "#FF4081"
-                            : product.badge === "New"
-                            ? "#4CAF50"
-                            : product.badge === "Premium"
-                            ? "#1A1A1A"
-                            : "#FF6B8A",
-                        color: "#FFFFFF",
+                        padding: "4px 10px",
+                        backgroundColor: "#FFFFFF",
+                        color: "#FF4081",
                         fontFamily: "var(--font-inter), sans-serif",
-                        fontSize: "10px",
+                        fontSize: "11px",
                         fontWeight: 700,
-                        letterSpacing: "1px",
-                        textTransform: "uppercase",
-                        borderRadius: "999px",
+                        borderRadius: "6px",
                         zIndex: 3,
-                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
                       }}
                     >
-                      {product.badge}
+                      -{discount}%
                     </div>
                   )}
 
-                  {/* Wishlist button — top right */}
+                  {/* Wishlist button */}
                   <button
                     onClick={() => toggleWishlist(product.id)}
                     aria-label="Add to wishlist"
@@ -301,16 +223,6 @@ export default function FeaturedProducts() {
                       zIndex: 3,
                       boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "scale(1.1)";
-                      e.currentTarget.style.color = "#FF4081";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "scale(1)";
-                      if (!isWishlisted) {
-                        e.currentTarget.style.color = "#1A1A1A";
-                      }
-                    }}
                   >
                     <FiHeart
                       size={16}
@@ -319,29 +231,7 @@ export default function FeaturedProducts() {
                     />
                   </button>
 
-                  {/* Discount tag — bottom left */}
-                  {discount > 0 && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: "12px",
-                        left: "12px",
-                        padding: "4px 10px",
-                        backgroundColor: "#FFFFFF",
-                        color: "#FF4081",
-                        fontFamily: "var(--font-inter), sans-serif",
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        borderRadius: "6px",
-                        zIndex: 3,
-                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                      }}
-                    >
-                      -{discount}%
-                    </div>
-                  )}
-
-                  {/* Add to cart — hover এ দেখাবে */}
+                  {/* Add to cart */}
                   <button
                     className="add-to-cart-btn"
                     aria-label="Add to cart"
@@ -381,22 +271,24 @@ export default function FeaturedProducts() {
                   }}
                 >
                   {/* Category */}
-                  <span
-                    style={{
-                      fontFamily: "var(--font-inter), sans-serif",
-                      fontSize: "10px",
-                      fontWeight: 600,
-                      color: "#FF6B8A",
-                      letterSpacing: "1.5px",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    {product.category}
-                  </span>
+                  {product.categories[0] && (
+                    <span
+                      style={{
+                        fontFamily: "var(--font-inter), sans-serif",
+                        fontSize: "10px",
+                        fontWeight: 600,
+                        color: "#FF6B8A",
+                        letterSpacing: "1.5px",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {product.categories[0].name}
+                    </span>
+                  )}
 
                   {/* Product Name */}
                   <Link
-                    href={`/product/${product.id}`}
+                    href={`/product/${product.slug}`}
                     style={{ textDecoration: "none" }}
                   >
                     <h3
@@ -429,8 +321,16 @@ export default function FeaturedProducts() {
                       <FiStar
                         key={i}
                         size={13}
-                        fill={i < product.rating ? "#FFB800" : "none"}
-                        stroke={i < product.rating ? "#FFB800" : "#CCCCCC"}
+                        fill={
+                          i < Math.round(parseFloat(product.average_rating))
+                            ? "#FFB800"
+                            : "none"
+                        }
+                        stroke={
+                          i < Math.round(parseFloat(product.average_rating))
+                            ? "#FFB800"
+                            : "#CCCCCC"
+                        }
                         strokeWidth={2}
                       />
                     ))}
@@ -442,7 +342,7 @@ export default function FeaturedProducts() {
                         marginLeft: "4px",
                       }}
                     >
-                      ({product.reviews})
+                      ({product.rating_count})
                     </span>
                   </div>
 
@@ -463,9 +363,9 @@ export default function FeaturedProducts() {
                         color: "#1A1A1A",
                       }}
                     >
-                      ৳{product.price.toLocaleString("bn-BD")}
+                      ৳{productPrice.toLocaleString("bn-BD")}
                     </span>
-                    {product.oldPrice && (
+                    {regularPrice > productPrice && (
                       <span
                         style={{
                           fontFamily: "var(--font-inter), sans-serif",
@@ -475,7 +375,7 @@ export default function FeaturedProducts() {
                           textDecoration: "line-through",
                         }}
                       >
-                        ৳{product.oldPrice.toLocaleString("bn-BD")}
+                        ৳{regularPrice.toLocaleString("bn-BD")}
                       </span>
                     )}
                   </div>
@@ -483,51 +383,6 @@ export default function FeaturedProducts() {
               </div>
             );
           })}
-        </div>
-
-        {/* ===== View All Button ===== */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            marginTop: "56px",
-          }}
-        >
-          <Link
-            href="/shop"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "10px",
-              padding: "16px 36px",
-              backgroundColor: "#1A1A1A",
-              color: "#FFFFFF",
-              fontFamily: "var(--font-inter), sans-serif",
-              fontSize: "14px",
-              fontWeight: 600,
-              textDecoration: "none",
-              borderRadius: "999px",
-              transition: "all 0.3s ease",
-              letterSpacing: "0.5px",
-              textTransform: "uppercase",
-              boxShadow: "0 10px 30px rgba(26, 26, 26, 0.15)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#FF6B8A";
-              e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow =
-                "0 15px 40px rgba(255, 107, 138, 0.4)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#1A1A1A";
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow =
-                "0 10px 30px rgba(26, 26, 26, 0.15)";
-            }}
-          >
-            সব প্রোডাক্ট দেখুন
-            <FiArrowRight size={16} strokeWidth={2.5} />
-          </Link>
         </div>
       </div>
 

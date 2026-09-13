@@ -70,6 +70,7 @@ export default function AboutPage() {
             fill
             style={{ objectFit: "cover", objectPosition: "center" }}
             priority
+            unoptimized
           />
 
           {/* Overlay */}
@@ -298,6 +299,7 @@ export default function AboutPage() {
               fill
               style={{ objectFit: "cover" }}
               sizes="(max-width: 768px) 100vw, 440px"
+              unoptimized
             />
 
             {/* Decorative badge */}

@@ -4,12 +4,13 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
+// ⚠️ আপনার নিজের ডিজাইনের slider images
 const sliderImages = [
-  "/images/slider1.jpg",
-  "/images/slider2.jpg",
-  "/images/slider3.jpg",
-  "/images/slider4.jpg",
-  "/images/slider5.jpg",
+  "/images/কাতান-৪-মেরুন.jpg",
+  "/images/কাতান-৭-হলুদ.jpg",
+  "/images/জামদানী-১-অফ-হোয়াইট.jpg",
+  "/images/সুতি-শাড়ী-৯.png",
+  "/images/হাফ-সিল্ক-১.jpg",
 ];
 
 // Typing effect hook
@@ -90,14 +91,7 @@ export default function HeroSection() {
           aria-hidden="true"
         >
           <defs>
-            {/* Left panel clip path — curved right edge */}
             <clipPath id="leftPanelClip" clipPathUnits="objectBoundingBox">
-              {/* 
-                - Start top-left (0,0)
-                - Line to 68% at top (curve starts)
-                - Curve down to 68% at bottom (mild bulge)
-                - Line to bottom-left (0,1)
-              */}
               <path
                 d="M 0 0 
                    L 0.68 0 
@@ -107,8 +101,7 @@ export default function HeroSection() {
               />
             </clipPath>
 
-            {/* Right panel clip path — curved left edge (overlaps deeply with left panel) */}
-                        <clipPath id="rightPanelClip" clipPathUnits="objectBoundingBox">
+            <clipPath id="rightPanelClip" clipPathUnits="objectBoundingBox">
               <path
                 d="M 1 0 
                    L 0.32 0 
@@ -121,7 +114,7 @@ export default function HeroSection() {
         </svg>
 
         {/* ============================================================
-            LEFT PANEL: Little Girl Image + Text + CTA
+            LEFT PANEL: Image + Text + CTA
         ============================================================ */}
         <div
           style={{
@@ -135,9 +128,9 @@ export default function HeroSection() {
             zIndex: 2,
           }}
         >
-          {/* Background image */}
+          {/* Background image — সুতি-শাড়ী-৮.png */}
           <Image
-            src="/images/little_girl.jpg"
+            src="/images/Hero-Left.png"
             alt="Little girl wearing traditional saree"
             fill
             style={{
@@ -145,6 +138,7 @@ export default function HeroSection() {
               objectPosition: "center top",
             }}
             priority
+            unoptimized
           />
 
           {/* Elegant gradient overlay for text readability */}
@@ -289,7 +283,7 @@ export default function HeroSection() {
         </div>
 
         {/* ============================================================
-            RIGHT PANEL: Slider (overlaps left panel to eliminate gap)
+            RIGHT PANEL: Slider (overlaps left panel)
         ============================================================ */}
         <div
           style={{
@@ -304,7 +298,7 @@ export default function HeroSection() {
             backgroundColor: "transparent",
           }}
         >
-          {/* Slider Images */}
+          {/* Slider Images — আপনার নিজের ডিজাইনের ছবি */}
           {sliderImages.map((img, index) => (
             <div
               key={img}
@@ -327,6 +321,7 @@ export default function HeroSection() {
                   transition: "transform 4s ease-out",
                 }}
                 priority={index === 0}
+                unoptimized
               />
             </div>
           ))}
@@ -355,7 +350,7 @@ export default function HeroSection() {
             ✦ Premium Saree
           </div>
 
-          {/* Slider Dots — positioned inside the visible (non-curved) area */}
+          {/* Slider Dots */}
           <div
             style={{
               position: "absolute",

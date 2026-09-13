@@ -8,10 +8,10 @@ import { FaTiktok } from "react-icons/fa";
 const categories = [
   { name: "কাতান", slug: "katan" },
   { name: "জামদানী", slug: "jamdani" },
-  { name: "চাঁদনী সিল্ক", slug: "chandni-silk" },
-  { name: "জাপানি সিল্ক", slug: "japanese-silk" },
-  { name: "সুতির শাড়ী", slug: "cotton-saree" },
+  { name: "জাপানি সিল্ক", slug: "japani-silk" },
+  { name: "সুতি শাড়ী", slug: "suti" },
   { name: "হাফ সিল্ক", slug: "half-silk" },
+  { name: "কাঞ্জিভরম", slug: "kanchibaram" },
 ];
 
 const shopBy = [

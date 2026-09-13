@@ -13,30 +13,172 @@ export const wooApi = axios.create({
   },
 });
 
-// WordPress API instance (posts, pages)
-export const wpApi = axios.create({
-  baseURL: `${WP_URL}/wp-json/wp/v2`,
-});
+// ===== Product Types =====
+export interface WooProduct {
+  id: number;
+  name: string;
+  slug: string;
+  type: string;
+  status: string;
+  price: string;
+  regular_price: string;
+  sale_price: string;
+  description: string;
+  short_description: string;
+  sku: string;
+  stock_status: string;
+  stock_quantity: number | null;
+  images: Array<{
+    id: number;
+    src: string;
+    alt: string;
+  }>;
+  categories: Array<{
+    id: number;
+    name: string;
+    slug: string;
+  }>;
+  tags: Array<{
+    id: number;
+    name: string;
+    slug: string;
+  }>;
+  attributes: Array<{
+    id: number;
+    name: string;
+    slug: string;
+    options: string[];
+    variation: boolean;
+  }>;
+  variations: number[];
+  average_rating: string;
+  rating_count: number;
+}
 
-// API Functions
-export const getProducts = async (params = {}) => {
-  const response = await wooApi.get("/products", { params });
-  return response.data;
+// ===== Fetch all products =====
+export const getProducts = async (params = {}): Promise<WooProduct[]> => {
+  try {
+    const response = await wooApi.get("/products", {
+      params: {
+        per_page: 100,
+        status: "publish",
+        ...params,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return [];
+  }
 };
 
-export const getProductBySlug = async (slug: string) => {
-  const response = await wooApi.get("/products", { params: { slug } });
-  return response.data[0];
+// ===== Fetch single product by slug =====
+export const getProductBySlug = async (
+  slug: string,
+): Promise<WooProduct | null> => {
+  try {
+    const response = await wooApi.get("/products", {
+      params: { slug },
+    });
+    return response.data[0] || null;
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    return null;
+  }
 };
 
+// ===== Fetch featured products =====
+export const getFeaturedProducts = async (): Promise<WooProduct[]> => {
+  try {
+    const response = await wooApi.get("/products", {
+      params: {
+        featured: true,
+        per_page: 8,
+        status: "publish",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching featured products:", error);
+    return [];
+  }
+};
+
+// ===== Fetch categories =====
 export const getCategories = async () => {
-  const response = await wooApi.get("/products/categories");
-  return response.data;
+  try {
+    const response = await wooApi.get("/products/categories", {
+      params: {
+        per_page: 100,
+        hide_empty: true,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    return [];
+  }
 };
 
-export const getFeaturedProducts = async () => {
-  const response = await wooApi.get("/products", {
-    params: { featured: true, per_page: 8 },
-  });
-  return response.data;
+// ===== Fetch products by category =====
+export const getProductsByCategory = async (
+  categorySlug: string,
+): Promise<WooProduct[]> => {
+  try {
+    const response = await wooApi.get("/products", {
+      params: {
+        category: categorySlug,
+        per_page: 100,
+        status: "publish",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching products by category:", error);
+    return [];
+  }
+};
+
+// ===== Fetch variations of a product =====
+export const getProductVariations = async (productId: number) => {
+  try {
+    const response = await wooApi.get(`/products/${productId}/variations`, {
+      params: { per_page: 100 },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching variations:", error);
+    return [];
+  }
+};
+
+// ===== Fetch single product by ID =====
+export const getProductById = async (
+  id: number,
+): Promise<WooProduct | null> => {
+  try {
+    const response = await wooApi.get(`/products/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching product by ID:", error);
+    return null;
+  }
+};
+
+// ===== Fetch product by decoded slug =====
+export const getProductByDecodedSlug = async (
+  encodedSlug: string,
+): Promise<WooProduct | null> => {
+  try {
+    // Decode the URL-encoded slug (handles Bengali characters)
+    const slug = decodeURIComponent(encodedSlug);
+
+    const response = await wooApi.get("/products", {
+      params: { slug, per_page: 1 },
+    });
+    return response.data[0] || null;
+  } catch (error) {
+    console.error("Error fetching product by slug:", error);
+    return null;
+  }
 };
