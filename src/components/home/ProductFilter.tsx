@@ -11,9 +11,10 @@ import {
   FiHeart,
   FiShoppingBag,
   FiStar,
+  FiLoader,
 } from "react-icons/fi";
 import { WooProduct } from "@/lib/api";
-
+import QuickAddModal from "@/components/product/QuickAddModal";
 interface ProductFilterProps {
   products: WooProduct[];
 }
@@ -64,6 +65,38 @@ export default function ProductFilter({ products }: ProductFilterProps) {
   const [sortBy, setSortBy] = useState("popular");
   const [openSection, setOpenSection] = useState<string | null>("category");
   const [wishlist, setWishlist] = useState<number[]>([]);
+  // Quick Add Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<WooProduct | null>(
+    null,
+  );
+  const [modalVariations, setModalVariations] = useState<any[]>([]);
+  const [loadingProductId, setLoadingProductId] = useState<number | null>(null);
+
+  const handleQuickAdd = async (product: WooProduct) => {
+    setLoadingProductId(product.id);
+    try {
+      const response = await fetch(`/api/variations/${product.id}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch variations: ${response.status}`);
+      }
+      const variations = await response.json();
+      setSelectedProduct(product);
+      setModalVariations(variations);
+      setModalOpen(true);
+    } catch (error) {
+      console.error("Error loading variations:", error);
+      alert("Variation লোড করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+    } finally {
+      setLoadingProductId(null);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedProduct(null);
+    setModalVariations([]);
+  };
 
   // ===== Read filters from URL query =====
   useEffect(() => {
@@ -231,728 +264,775 @@ export default function ProductFilter({ products }: ProductFilterProps) {
     priceRange < 5000;
 
   return (
-    <section
-      id="product-filter"
-      style={{
-        width: "100%",
-        padding: "80px 24px",
-        backgroundColor: "#FFFFFF",
-        scrollMarginTop: "120px",
-      }}
-    >
-      <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-        {/* Heading */}
-        <div style={{ textAlign: "center", marginBottom: "48px" }}>
-          <span
-            style={{
-              display: "inline-block",
-              fontFamily: "var(--font-inter), sans-serif",
-              fontSize: "12px",
-              fontWeight: 600,
-              color: "#FF6B8A",
-              letterSpacing: "3px",
-              textTransform: "uppercase",
-              marginBottom: "12px",
-            }}
-          >
-            Find Your Perfect Saree
-          </span>
-          <h2
-            style={{
-              fontFamily: "var(--font-cormorant), serif",
-              fontSize: "clamp(28px, 3vw, 42px)",
-              fontWeight: 600,
-              color: "#1A1A1A",
-              margin: 0,
-              lineHeight: 1.2,
-              letterSpacing: "0.3px",
-            }}
-          >
-            আপনার পছন্দের{" "}
-            <span style={{ color: "#FF6B8A", fontStyle: "italic" }}>শাড়ি</span>{" "}
-            খুঁজুন
-          </h2>
-        </div>
-
-        {/* 2 Columns */}
-        <div
-          className="filter-container"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "300px 1fr",
-            gap: "32px",
-            alignItems: "start",
-          }}
-        >
-          {/* Filter Sidebar */}
-          <aside
-            className="filter-sidebar"
-            style={{
-              backgroundColor: "#FFF8F9",
-              borderRadius: "24px",
-              padding: "24px 22px",
-              position: "sticky",
-              top: "100px",
-              border: "1px solid rgba(255, 107, 138, 0.08)",
-            }}
-          >
-            <div
+    <>
+      <section
+        id="product-filter"
+        style={{
+          width: "100%",
+          padding: "80px 24px",
+          backgroundColor: "#FFFFFF",
+          scrollMarginTop: "120px",
+        }}
+      >
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+          {/* Heading */}
+          <div style={{ textAlign: "center", marginBottom: "48px" }}>
+            <span
               style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "20px",
-                paddingBottom: "14px",
-                borderBottom: "1px solid rgba(255, 107, 138, 0.15)",
+                display: "inline-block",
+                fontFamily: "var(--font-inter), sans-serif",
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "#FF6B8A",
+                letterSpacing: "3px",
+                textTransform: "uppercase",
+                marginBottom: "12px",
+              }}
+            >
+              Find Your Perfect Saree
+            </span>
+            <h2
+              style={{
+                fontFamily: "var(--font-cormorant), serif",
+                fontSize: "clamp(28px, 3vw, 42px)",
+                fontWeight: 600,
+                color: "#1A1A1A",
+                margin: 0,
+                lineHeight: 1.2,
+                letterSpacing: "0.3px",
+              }}
+            >
+              আপনার পছন্দের{" "}
+              <span style={{ color: "#FF6B8A", fontStyle: "italic" }}>
+                শাড়ি
+              </span>{" "}
+              খুঁজুন
+            </h2>
+          </div>
+
+          {/* 2 Columns */}
+          <div
+            className="filter-container"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "300px 1fr",
+              gap: "32px",
+              alignItems: "start",
+            }}
+          >
+            {/* Filter Sidebar */}
+            <aside
+              className="filter-sidebar"
+              style={{
+                backgroundColor: "#FFF8F9",
+                borderRadius: "24px",
+                padding: "24px 22px",
+                position: "sticky",
+                top: "100px",
+                border: "1px solid rgba(255, 107, 138, 0.08)",
               }}
             >
               <div
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                <FiSearch size={16} style={{ color: "#FF6B8A" }} />
-                <h3
-                  style={{
-                    fontFamily: "var(--font-cormorant), serif",
-                    fontSize: "18px",
-                    fontWeight: 700,
-                    color: "#1A1A1A",
-                    margin: 0,
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  Filters
-                </h3>
-              </div>
-              {hasActiveFilters && (
-                <button
-                  onClick={resetFilters}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    padding: "4px 8px",
-                    backgroundColor: "rgba(255, 107, 138, 0.1)",
-                    border: "none",
-                    color: "#FF6B8A",
-                    fontFamily: "var(--font-inter), sans-serif",
-                    fontSize: "10px",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    borderRadius: "6px",
-                  }}
-                >
-                  <FiRefreshCw size={10} />
-                  রিসেট
-                </button>
-              )}
-            </div>
-
-            {/* Category Filter */}
-            <FilterSection
-              title="ক্যাটেগরি"
-              isOpen={openSection === "category"}
-              onToggle={() => toggleSection("category")}
-              badge={
-                selectedCategory !== "all"
-                  ? categories.find((c) => c.slug === selectedCategory)?.name
-                  : undefined
-              }
-            >
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: "4px" }}
-              >
-                {categories.map((cat) => (
-                  <label
-                    key={cat.slug}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      padding: "6px 8px",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      fontFamily: "var(--font-inter), sans-serif",
-                      fontSize: "13px",
-                      color:
-                        selectedCategory === cat.slug ? "#FF6B8A" : "#555555",
-                      fontWeight: selectedCategory === cat.slug ? 600 : 400,
-                      backgroundColor:
-                        selectedCategory === cat.slug
-                          ? "rgba(255, 107, 138, 0.08)"
-                          : "transparent",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="category"
-                      value={cat.slug}
-                      checked={selectedCategory === cat.slug}
-                      onChange={() => setSelectedCategory(cat.slug)}
-                      style={{
-                        accentColor: "#FF6B8A",
-                        cursor: "pointer",
-                        width: "13px",
-                        height: "13px",
-                      }}
-                    />
-                    {cat.name}
-                  </label>
-                ))}
-              </div>
-            </FilterSection>
-
-            {/* Color Filter */}
-            <FilterSection
-              title="রঙ"
-              isOpen={openSection === "color"}
-              onToggle={() => toggleSection("color")}
-              badge={
-                selectedColor
-                  ? colors.find((c) => c.slug === selectedColor)?.name
-                  : undefined
-              }
-            >
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                {colors.map((color) => (
-                  <button
-                    key={color.slug}
-                    onClick={() =>
-                      setSelectedColor(
-                        selectedColor === color.slug ? "" : color.slug,
-                      )
-                    }
-                    aria-label={color.name}
-                    title={color.name}
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      borderRadius: "50%",
-                      backgroundColor: color.value,
-                      border:
-                        selectedColor === color.slug
-                          ? "2px solid #FF6B8A"
-                          : "2px solid rgba(0, 0, 0, 0.1)",
-                      cursor: "pointer",
-                      transition: "all 0.25s ease",
-                      boxShadow:
-                        selectedColor === color.slug
-                          ? "0 0 0 3px rgba(255, 107, 138, 0.2)"
-                          : "0 2px 6px rgba(0, 0, 0, 0.08)",
-                      transform:
-                        selectedColor === color.slug
-                          ? "scale(1.05)"
-                          : "scale(1)",
-                    }}
-                  />
-                ))}
-              </div>
-            </FilterSection>
-
-            {/* Age Filter */}
-            <FilterSection
-              title="বয়স"
-              isOpen={openSection === "age"}
-              onToggle={() => toggleSection("age")}
-              badge={
-                selectedAge
-                  ? ages.find((a) => a.slug === selectedAge)?.name
-                  : undefined
-              }
-            >
-              <div
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: "20px",
+                  paddingBottom: "14px",
+                  borderBottom: "1px solid rgba(255, 107, 138, 0.15)",
                 }}
               >
-                {ages.map((age) => (
-                  <button
-                    key={age.slug}
-                    onClick={() =>
-                      setSelectedAge(selectedAge === age.slug ? "" : age.slug)
-                    }
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <FiSearch size={16} style={{ color: "#FF6B8A" }} />
+                  <h3
                     style={{
-                      padding: "7px 4px",
-                      fontFamily: "var(--font-inter), sans-serif",
-                      fontSize: "11px",
-                      fontWeight: selectedAge === age.slug ? 600 : 500,
-                      color: selectedAge === age.slug ? "#FFFFFF" : "#555555",
-                      backgroundColor:
-                        selectedAge === age.slug ? "#FF6B8A" : "#FFFFFF",
-                      border:
-                        selectedAge === age.slug
-                          ? "1px solid #FF6B8A"
-                          : "1px solid rgba(0, 0, 0, 0.08)",
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
+                      fontFamily: "var(--font-cormorant), serif",
+                      fontSize: "18px",
+                      fontWeight: 700,
+                      color: "#1A1A1A",
+                      margin: 0,
+                      letterSpacing: "0.5px",
                     }}
                   >
-                    {age.name}
-                  </button>
-                ))}
-              </div>
-            </FilterSection>
-
-            {/* Occasion Filter */}
-            <FilterSection
-              title="অনুষ্ঠান"
-              isOpen={openSection === "occasion"}
-              onToggle={() => toggleSection("occasion")}
-              badge={
-                selectedOccasion !== "all"
-                  ? occasions.find((o) => o.slug === selectedOccasion)?.name
-                  : undefined
-              }
-            >
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: "4px" }}
-              >
-                {occasions.map((occ) => (
-                  <label
-                    key={occ.slug}
+                    Filters
+                  </h3>
+                </div>
+                {hasActiveFilters && (
+                  <button
+                    onClick={resetFilters}
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "10px",
-                      padding: "6px 8px",
-                      borderRadius: "6px",
-                      cursor: "pointer",
+                      gap: "4px",
+                      padding: "4px 8px",
+                      backgroundColor: "rgba(255, 107, 138, 0.1)",
+                      border: "none",
+                      color: "#FF6B8A",
                       fontFamily: "var(--font-inter), sans-serif",
-                      fontSize: "13px",
-                      color:
-                        selectedOccasion === occ.slug ? "#FF6B8A" : "#555555",
-                      fontWeight: selectedOccasion === occ.slug ? 600 : 400,
-                      backgroundColor:
-                        selectedOccasion === occ.slug
-                          ? "rgba(255, 107, 138, 0.08)"
-                          : "transparent",
-                      transition: "all 0.2s ease",
+                      fontSize: "10px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      borderRadius: "6px",
                     }}
                   >
-                    <input
-                      type="radio"
-                      name="occasion"
-                      value={occ.slug}
-                      checked={selectedOccasion === occ.slug}
-                      onChange={() => setSelectedOccasion(occ.slug)}
-                      style={{
-                        accentColor: "#FF6B8A",
-                        cursor: "pointer",
-                        width: "13px",
-                        height: "13px",
-                      }}
-                    />
-                    {occ.name}
-                  </label>
-                ))}
+                    <FiRefreshCw size={10} />
+                    রিসেট
+                  </button>
+                )}
               </div>
-            </FilterSection>
 
-            {/* Price Filter */}
-            <FilterSection
-              title="দাম"
-              isOpen={openSection === "price"}
-              onToggle={() => toggleSection("price")}
-              badge={`৳${priceRange.toLocaleString("bn-BD")}`}
-              isLast
-            >
-              <div>
+              {/* Category Filter */}
+              <FilterSection
+                title="ক্যাটেগরি"
+                isOpen={openSection === "category"}
+                onToggle={() => toggleSection("category")}
+                badge={
+                  selectedCategory !== "all"
+                    ? categories.find((c) => c.slug === selectedCategory)?.name
+                    : undefined
+                }
+              >
                 <div
                   style={{
                     display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "10px",
-                    fontFamily: "var(--font-inter), sans-serif",
-                    fontSize: "11px",
-                    color: "#777777",
+                    flexDirection: "column",
+                    gap: "4px",
                   }}
                 >
-                  <span>৳৫০০</span>
+                  {categories.map((cat) => (
+                    <label
+                      key={cat.slug}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "6px 8px",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        fontFamily: "var(--font-inter), sans-serif",
+                        fontSize: "13px",
+                        color:
+                          selectedCategory === cat.slug ? "#FF6B8A" : "#555555",
+                        fontWeight: selectedCategory === cat.slug ? 600 : 400,
+                        backgroundColor:
+                          selectedCategory === cat.slug
+                            ? "rgba(255, 107, 138, 0.08)"
+                            : "transparent",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="category"
+                        value={cat.slug}
+                        checked={selectedCategory === cat.slug}
+                        onChange={() => setSelectedCategory(cat.slug)}
+                        style={{
+                          accentColor: "#FF6B8A",
+                          cursor: "pointer",
+                          width: "13px",
+                          height: "13px",
+                        }}
+                      />
+                      {cat.name}
+                    </label>
+                  ))}
+                </div>
+              </FilterSection>
+
+              {/* Color Filter */}
+              <FilterSection
+                title="রঙ"
+                isOpen={openSection === "color"}
+                onToggle={() => toggleSection("color")}
+                badge={
+                  selectedColor
+                    ? colors.find((c) => c.slug === selectedColor)?.name
+                    : undefined
+                }
+              >
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  {colors.map((color) => (
+                    <button
+                      key={color.slug}
+                      onClick={() =>
+                        setSelectedColor(
+                          selectedColor === color.slug ? "" : color.slug,
+                        )
+                      }
+                      aria-label={color.name}
+                      title={color.name}
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        borderRadius: "50%",
+                        backgroundColor: color.value,
+                        border:
+                          selectedColor === color.slug
+                            ? "2px solid #FF6B8A"
+                            : "2px solid rgba(0, 0, 0, 0.1)",
+                        cursor: "pointer",
+                        transition: "all 0.25s ease",
+                        boxShadow:
+                          selectedColor === color.slug
+                            ? "0 0 0 3px rgba(255, 107, 138, 0.2)"
+                            : "0 2px 6px rgba(0, 0, 0, 0.08)",
+                        transform:
+                          selectedColor === color.slug
+                            ? "scale(1.05)"
+                            : "scale(1)",
+                      }}
+                    />
+                  ))}
+                </div>
+              </FilterSection>
+
+              {/* Age Filter */}
+              <FilterSection
+                title="বয়স"
+                isOpen={openSection === "age"}
+                onToggle={() => toggleSection("age")}
+                badge={
+                  selectedAge
+                    ? ages.find((a) => a.slug === selectedAge)?.name
+                    : undefined
+                }
+              >
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "6px",
+                  }}
+                >
+                  {ages.map((age) => (
+                    <button
+                      key={age.slug}
+                      onClick={() =>
+                        setSelectedAge(selectedAge === age.slug ? "" : age.slug)
+                      }
+                      style={{
+                        padding: "7px 4px",
+                        fontFamily: "var(--font-inter), sans-serif",
+                        fontSize: "11px",
+                        fontWeight: selectedAge === age.slug ? 600 : 500,
+                        color: selectedAge === age.slug ? "#FFFFFF" : "#555555",
+                        backgroundColor:
+                          selectedAge === age.slug ? "#FF6B8A" : "#FFFFFF",
+                        border:
+                          selectedAge === age.slug
+                            ? "1px solid #FF6B8A"
+                            : "1px solid rgba(0, 0, 0, 0.08)",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      {age.name}
+                    </button>
+                  ))}
+                </div>
+              </FilterSection>
+
+              {/* Occasion Filter */}
+              <FilterSection
+                title="অনুষ্ঠান"
+                isOpen={openSection === "occasion"}
+                onToggle={() => toggleSection("occasion")}
+                badge={
+                  selectedOccasion !== "all"
+                    ? occasions.find((o) => o.slug === selectedOccasion)?.name
+                    : undefined
+                }
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "4px",
+                  }}
+                >
+                  {occasions.map((occ) => (
+                    <label
+                      key={occ.slug}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "6px 8px",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        fontFamily: "var(--font-inter), sans-serif",
+                        fontSize: "13px",
+                        color:
+                          selectedOccasion === occ.slug ? "#FF6B8A" : "#555555",
+                        fontWeight: selectedOccasion === occ.slug ? 600 : 400,
+                        backgroundColor:
+                          selectedOccasion === occ.slug
+                            ? "rgba(255, 107, 138, 0.08)"
+                            : "transparent",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="occasion"
+                        value={occ.slug}
+                        checked={selectedOccasion === occ.slug}
+                        onChange={() => setSelectedOccasion(occ.slug)}
+                        style={{
+                          accentColor: "#FF6B8A",
+                          cursor: "pointer",
+                          width: "13px",
+                          height: "13px",
+                        }}
+                      />
+                      {occ.name}
+                    </label>
+                  ))}
+                </div>
+              </FilterSection>
+
+              {/* Price Filter */}
+              <FilterSection
+                title="দাম"
+                isOpen={openSection === "price"}
+                onToggle={() => toggleSection("price")}
+                badge={`৳${priceRange.toLocaleString("bn-BD")}`}
+                isLast
+              >
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: "10px",
+                      fontFamily: "var(--font-inter), sans-serif",
+                      fontSize: "11px",
+                      color: "#777777",
+                    }}
+                  >
+                    <span>৳৫০০</span>
+                    <span
+                      style={{
+                        color: "#FF6B8A",
+                        fontWeight: 700,
+                        fontSize: "13px",
+                      }}
+                    >
+                      ৳{priceRange.toLocaleString("bn-BD")}
+                    </span>
+                    <span>৳৫০০০</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="500"
+                    max="5000"
+                    step="100"
+                    value={priceRange}
+                    onChange={(e) => setPriceRange(Number(e.target.value))}
+                    className="price-slider"
+                    style={{ width: "100%", accentColor: "#FF6B8A" }}
+                  />
+                </div>
+              </FilterSection>
+            </aside>
+
+            {/* Filtered Products */}
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "20px",
+                  padding: "0 4px",
+                  flexWrap: "wrap",
+                  gap: "12px",
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: "var(--font-inter), sans-serif",
+                    fontSize: "14px",
+                    color: "#777777",
+                    margin: 0,
+                  }}
+                >
+                  দেখানো হচ্ছে{" "}
                   <span
                     style={{
                       color: "#FF6B8A",
                       fontWeight: 700,
-                      fontSize: "13px",
+                      fontSize: "16px",
                     }}
                   >
-                    ৳{priceRange.toLocaleString("bn-BD")}
-                  </span>
-                  <span>৳৫০০০</span>
-                </div>
-                <input
-                  type="range"
-                  min="500"
-                  max="5000"
-                  step="100"
-                  value={priceRange}
-                  onChange={(e) => setPriceRange(Number(e.target.value))}
-                  className="price-slider"
-                  style={{ width: "100%", accentColor: "#FF6B8A" }}
-                />
-              </div>
-            </FilterSection>
-          </aside>
-
-          {/* Filtered Products */}
-          <div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "20px",
-                padding: "0 4px",
-                flexWrap: "wrap",
-                gap: "12px",
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: "var(--font-inter), sans-serif",
-                  fontSize: "14px",
-                  color: "#777777",
-                  margin: 0,
-                }}
-              >
-                দেখানো হচ্ছে{" "}
-                <span
-                  style={{
-                    color: "#FF6B8A",
-                    fontWeight: 700,
-                    fontSize: "16px",
-                  }}
-                >
-                  {filteredProducts.length}
-                </span>{" "}
-                টি প্রোডাক্ট
-              </p>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                style={{
-                  padding: "8px 14px",
-                  fontFamily: "var(--font-inter), sans-serif",
-                  fontSize: "12px",
-                  color: "#555555",
-                  backgroundColor: "#FFFFFF",
-                  border: "1px solid rgba(0, 0, 0, 0.1)",
-                  borderRadius: "10px",
-                  cursor: "pointer",
-                  outline: "none",
-                }}
-              >
-                <option value="popular">জনপ্রিয়</option>
-                <option value="price-low">কম দাম প্রথমে</option>
-                <option value="price-high">বেশি দাম প্রথমে</option>
-              </select>
-            </div>
-
-            {filteredProducts.length === 0 && (
-              <div
-                style={{
-                  padding: "80px 32px",
-                  textAlign: "center",
-                  backgroundColor: "#FFF8F9",
-                  borderRadius: "20px",
-                }}
-              >
-                <div style={{ fontSize: "56px", marginBottom: "16px" }}>🔍</div>
-                <h3
-                  style={{
-                    fontFamily: "var(--font-cormorant), serif",
-                    fontSize: "24px",
-                    fontWeight: 700,
-                    color: "#1A1A1A",
-                    margin: 0,
-                    marginBottom: "8px",
-                  }}
-                >
-                  কোনো প্রোডাক্ট পাওয়া যায়নি
-                </h3>
-                <p
-                  style={{
-                    fontFamily: "var(--font-inter), sans-serif",
-                    fontSize: "13px",
-                    color: "#777777",
-                    margin: 0,
-                    marginBottom: "20px",
-                  }}
-                >
-                  ফিল্টার পরিবর্তন করে আবার চেষ্টা করুন
+                    {filteredProducts.length}
+                  </span>{" "}
+                  টি প্রোডাক্ট
                 </p>
-                <button
-                  onClick={resetFilters}
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
                   style={{
-                    padding: "10px 24px",
-                    backgroundColor: "#FF6B8A",
-                    color: "#FFFFFF",
-                    border: "none",
-                    borderRadius: "999px",
+                    padding: "8px 14px",
                     fontFamily: "var(--font-inter), sans-serif",
-                    fontSize: "13px",
-                    fontWeight: 600,
+                    fontSize: "12px",
+                    color: "#555555",
+                    backgroundColor: "#FFFFFF",
+                    border: "1px solid rgba(0, 0, 0, 0.1)",
+                    borderRadius: "10px",
                     cursor: "pointer",
+                    outline: "none",
                   }}
                 >
-                  🔄 সব ফিল্টার রিসেট করুন
-                </button>
+                  <option value="popular">জনপ্রিয়</option>
+                  <option value="price-low">কম দাম প্রথমে</option>
+                  <option value="price-high">বেশি দাম প্রথমে</option>
+                </select>
               </div>
-            )}
 
-            {filteredProducts.length > 0 && (
-              <div
-                className="filtered-products-grid"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, 1fr)",
-                  gap: "18px",
-                }}
-              >
-                {filteredProducts.map((product) => {
-                  const isWishlisted = wishlist.includes(product.id);
-                  const productImage =
-                    product.images[0]?.src || "/images/placeholder.jpg";
-                  const productPrice = parseFloat(product.price) || 0;
+              {filteredProducts.length === 0 && (
+                <div
+                  style={{
+                    padding: "80px 32px",
+                    textAlign: "center",
+                    backgroundColor: "#FFF8F9",
+                    borderRadius: "20px",
+                  }}
+                >
+                  <div style={{ fontSize: "56px", marginBottom: "16px" }}>
+                    🔍
+                  </div>
+                  <h3
+                    style={{
+                      fontFamily: "var(--font-cormorant), serif",
+                      fontSize: "24px",
+                      fontWeight: 700,
+                      color: "#1A1A1A",
+                      margin: 0,
+                      marginBottom: "8px",
+                    }}
+                  >
+                    কোনো প্রোডাক্ট পাওয়া যায়নি
+                  </h3>
+                  <p
+                    style={{
+                      fontFamily: "var(--font-inter), sans-serif",
+                      fontSize: "13px",
+                      color: "#777777",
+                      margin: 0,
+                      marginBottom: "20px",
+                    }}
+                  >
+                    ফিল্টার পরিবর্তন করে আবার চেষ্টা করুন
+                  </p>
+                  <button
+                    onClick={resetFilters}
+                    style={{
+                      padding: "10px 24px",
+                      backgroundColor: "#FF6B8A",
+                      color: "#FFFFFF",
+                      border: "none",
+                      borderRadius: "999px",
+                      fontFamily: "var(--font-inter), sans-serif",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    🔄 সব ফিল্টার রিসেট করুন
+                  </button>
+                </div>
+              )}
 
-                  return (
-                    <div
-                      key={product.id}
-                      className="filter-product-card"
-                      style={{
-                        backgroundColor: "#FFFFFF",
-                        borderRadius: "18px",
-                        overflow: "hidden",
-                        transition: "all 0.35s ease",
-                        boxShadow: "0 4px 16px rgba(0, 0, 0, 0.05)",
-                        border: "1px solid rgba(0, 0, 0, 0.04)",
-                        position: "relative",
-                      }}
-                    >
+              {filteredProducts.length > 0 && (
+                <div
+                  className="filtered-products-grid"
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, 1fr)",
+                    gap: "18px",
+                  }}
+                >
+                  {filteredProducts.map((product) => {
+                    const isWishlisted = wishlist.includes(product.id);
+                    const productImage =
+                      product.images[0]?.src || "/images/placeholder.jpg";
+                    const productPrice = parseFloat(product.price) || 0;
+
+                    return (
                       <div
+                        key={product.id}
+                        className="filter-product-card"
                         style={{
-                          position: "relative",
-                          aspectRatio: "1 / 1",
+                          backgroundColor: "#FFFFFF",
+                          borderRadius: "18px",
                           overflow: "hidden",
-                          backgroundColor: "#F5EFE6",
+                          transition: "all 0.35s ease",
+                          boxShadow: "0 4px 16px rgba(0, 0, 0, 0.05)",
+                          border: "1px solid rgba(0, 0, 0, 0.04)",
+                          position: "relative",
                         }}
                       >
-                        <Link href={`/product/${product.slug}`}>
-                          <Image
-                            src={productImage}
-                            alt={product.name}
-                            fill
+                        <div
+                          style={{
+                            position: "relative",
+                            aspectRatio: "1 / 1",
+                            overflow: "hidden",
+                            backgroundColor: "#F5EFE6",
+                          }}
+                        >
+                          <Link href={`/product/${product.slug}`}>
+                            <Image
+                              src={productImage}
+                              alt={product.name}
+                              fill
+                              style={{
+                                objectFit: "cover",
+                                transition: "transform 0.6s ease",
+                              }}
+                              className="filter-product-image"
+                              sizes="(max-width: 640px) 50vw, 33vw"
+                              unoptimized
+                            />
+                          </Link>
+
+                          <button
+                            onClick={() => toggleWishlist(product.id)}
+                            aria-label="Wishlist"
                             style={{
-                              objectFit: "cover",
-                              transition: "transform 0.6s ease",
+                              position: "absolute",
+                              top: "10px",
+                              right: "10px",
+                              width: "30px",
+                              height: "30px",
+                              borderRadius: "50%",
+                              backgroundColor: "rgba(255, 255, 255, 0.95)",
+                              border: "none",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: isWishlisted ? "#FF4081" : "#1A1A1A",
+                              transition: "all 0.3s ease",
+                              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
                             }}
-                            className="filter-product-image"
-                            sizes="(max-width: 640px) 50vw, 33vw"
-                            unoptimized
-                          />
-                        </Link>
+                          >
+                            <FiHeart
+                              size={13}
+                              fill={isWishlisted ? "#FF4081" : "none"}
+                              strokeWidth={2}
+                            />
+                          </button>
 
-                        <button
-                          onClick={() => toggleWishlist(product.id)}
-                          aria-label="Wishlist"
-                          style={{
-                            position: "absolute",
-                            top: "10px",
-                            right: "10px",
-                            width: "30px",
-                            height: "30px",
-                            borderRadius: "50%",
-                            backgroundColor: "rgba(255, 255, 255, 0.95)",
-                            border: "none",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: isWishlisted ? "#FF4081" : "#1A1A1A",
-                            transition: "all 0.3s ease",
-                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-                          }}
-                        >
-                          <FiHeart
-                            size={13}
-                            fill={isWishlisted ? "#FF4081" : "none"}
-                            strokeWidth={2}
-                          />
-                        </button>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleQuickAdd(product);
+                            }}
+                            disabled={loadingProductId === product.id}
+                            className="filter-add-cart"
+                            aria-label="Quick add to cart"
+                            style={{
+                              position: "absolute",
+                              bottom: "10px",
+                              right: "10px",
+                              width: "34px",
+                              height: "34px",
+                              borderRadius: "50%",
+                              backgroundColor:
+                                loadingProductId === product.id
+                                  ? "#CCCCCC"
+                                  : "#FF6B8A",
+                              color: "#FFFFFF",
+                              border: "none",
+                              cursor:
+                                loadingProductId === product.id
+                                  ? "wait"
+                                  : "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              transition: "all 0.3s ease",
+                              opacity: 0,
+                              transform: "translateY(10px)",
+                              boxShadow: "0 6px 20px rgba(255, 107, 138, 0.4)",
+                              zIndex: 5,
+                            }}
+                          >
+                            {loadingProductId === product.id ? (
+                              <FiLoader
+                                size={15}
+                                strokeWidth={2.2}
+                                style={{ animation: "spin 1s linear infinite" }}
+                              />
+                            ) : (
+                              <FiShoppingBag size={15} strokeWidth={2.2} />
+                            )}
+                          </button>
+                        </div>
 
-                        <button
-                          className="filter-add-cart"
-                          aria-label="Add to cart"
-                          style={{
-                            position: "absolute",
-                            bottom: "10px",
-                            right: "10px",
-                            width: "34px",
-                            height: "34px",
-                            borderRadius: "50%",
-                            backgroundColor: "#FF6B8A",
-                            color: "#FFFFFF",
-                            border: "none",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            transition: "all 0.3s ease",
-                            opacity: 0,
-                            transform: "translateY(10px)",
-                            boxShadow: "0 6px 20px rgba(255, 107, 138, 0.4)",
-                          }}
-                        >
-                          <FiShoppingBag size={15} strokeWidth={2.2} />
-                        </button>
-                      </div>
-
-                      <div style={{ padding: "12px 14px 14px" }}>
-                        {product.categories[0] && (
+                        <div style={{ padding: "12px 14px 14px" }}>
+                          {product.categories[0] && (
+                            <span
+                              style={{
+                                fontFamily: "var(--font-inter), sans-serif",
+                                fontSize: "10px",
+                                fontWeight: 600,
+                                color: "#FF6B8A",
+                                letterSpacing: "1.2px",
+                                textTransform: "uppercase",
+                              }}
+                            >
+                              {product.categories[0].name}
+                            </span>
+                          )}
+                          <h4
+                            style={{
+                              fontFamily: "var(--font-cormorant), serif",
+                              fontSize: "16px",
+                              fontWeight: 600,
+                              color: "#1A1A1A",
+                              margin: "6px 0 6px",
+                              lineHeight: 1.3,
+                            }}
+                          >
+                            {product.name}
+                          </h4>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "3px",
+                              marginBottom: "6px",
+                            }}
+                          >
+                            {[...Array(5)].map((_, i) => (
+                              <FiStar
+                                key={i}
+                                size={10}
+                                fill={
+                                  i <
+                                  Math.round(parseFloat(product.average_rating))
+                                    ? "#FFB800"
+                                    : "none"
+                                }
+                                stroke={
+                                  i <
+                                  Math.round(parseFloat(product.average_rating))
+                                    ? "#FFB800"
+                                    : "#CCCCCC"
+                                }
+                                strokeWidth={2}
+                              />
+                            ))}
+                          </div>
                           <span
                             style={{
                               fontFamily: "var(--font-inter), sans-serif",
-                              fontSize: "10px",
-                              fontWeight: 600,
-                              color: "#FF6B8A",
-                              letterSpacing: "1.2px",
-                              textTransform: "uppercase",
+                              fontSize: "15px",
+                              fontWeight: 700,
+                              color: "#1A1A1A",
                             }}
                           >
-                            {product.categories[0].name}
+                            ৳{productPrice.toLocaleString("bn-BD")}
                           </span>
-                        )}
-                        <h4
-                          style={{
-                            fontFamily: "var(--font-cormorant), serif",
-                            fontSize: "16px",
-                            fontWeight: 600,
-                            color: "#1A1A1A",
-                            margin: "6px 0 6px",
-                            lineHeight: 1.3,
-                          }}
-                        >
-                          {product.name}
-                        </h4>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "3px",
-                            marginBottom: "6px",
-                          }}
-                        >
-                          {[...Array(5)].map((_, i) => (
-                            <FiStar
-                              key={i}
-                              size={10}
-                              fill={
-                                i <
-                                Math.round(parseFloat(product.average_rating))
-                                  ? "#FFB800"
-                                  : "none"
-                              }
-                              stroke={
-                                i <
-                                Math.round(parseFloat(product.average_rating))
-                                  ? "#FFB800"
-                                  : "#CCCCCC"
-                              }
-                              strokeWidth={2}
-                            />
-                          ))}
                         </div>
-                        <span
-                          style={{
-                            fontFamily: "var(--font-inter), sans-serif",
-                            fontSize: "15px",
-                            fontWeight: 700,
-                            color: "#1A1A1A",
-                          }}
-                        >
-                          ৳{productPrice.toLocaleString("bn-BD")}
-                        </span>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      <style jsx>{`
-        .filter-product-card:hover .filter-product-image {
-          transform: scale(1.08);
-        }
-
-        .filter-product-card:hover .filter-add-cart {
-          opacity: 1 !important;
-          transform: translateY(0) !important;
-        }
-
-        .filter-add-cart:hover {
-          background-color: #ff4081 !important;
-          transform: scale(1.1) !important;
-        }
-
-        .price-slider {
-          -webkit-appearance: none;
-          appearance: none;
-          height: 5px;
-          border-radius: 999px;
-          background: linear-gradient(
-            to right,
-            #ff6b8a 0%,
-            #ff6b8a var(--value, 100%),
-            #ffe5ec var(--value, 100%),
-            #ffe5ec 100%
-          );
-        }
-
-        .price-slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          background: #ff6b8a;
-          border: 3px solid #ffffff;
-          box-shadow: 0 4px 12px rgba(255, 107, 138, 0.4);
-          cursor: pointer;
-        }
-
-        .price-slider::-moz-range-thumb {
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          background: #ff6b8a;
-          border: 3px solid #ffffff;
-          cursor: pointer;
-        }
-
-        @media (max-width: 1024px) {
-          .filter-container {
-            grid-template-columns: 1fr !important;
+        <style jsx>{`
+          @keyframes spin {
+            to {
+              transform: rotate(360deg);
+            }
           }
-          .filter-sidebar {
-            position: static !important;
+          .filter-product-card:hover .filter-product-image {
+            transform: scale(1.08);
           }
-          .filtered-products-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-        }
 
-        @media (max-width: 640px) {
-          .filtered-products-grid {
-            grid-template-columns: 1fr !important;
+          .filter-product-card:hover .filter-add-cart {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
           }
-        }
-      `}</style>
-    </section>
+
+          .filter-add-cart:hover {
+            background-color: #ff4081 !important;
+            transform: scale(1.1) !important;
+          }
+
+          .price-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 5px;
+            border-radius: 999px;
+            background: linear-gradient(
+              to right,
+              #ff6b8a 0%,
+              #ff6b8a var(--value, 100%),
+              #ffe5ec var(--value, 100%),
+              #ffe5ec 100%
+            );
+          }
+
+          .price-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ff6b8a;
+            border: 3px solid #ffffff;
+            box-shadow: 0 4px 12px rgba(255, 107, 138, 0.4);
+            cursor: pointer;
+          }
+
+          .price-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ff6b8a;
+            border: 3px solid #ffffff;
+            cursor: pointer;
+          }
+
+          @media (max-width: 1024px) {
+            .filter-container {
+              grid-template-columns: 1fr !important;
+            }
+            .filter-sidebar {
+              position: static !important;
+            }
+            .filtered-products-grid {
+              grid-template-columns: repeat(2, 1fr) !important;
+            }
+          }
+
+          @media (max-width: 640px) {
+            .filtered-products-grid {
+              grid-template-columns: 1fr !important;
+            }
+          }
+        `}</style>
+      </section>
+      {/* ===== Quick Add Modal ===== */}
+      <QuickAddModal
+        product={selectedProduct}
+        variations={modalVariations}
+        isOpen={modalOpen}
+        onClose={handleCloseModal}
+      />
+    </>
   );
 }
 

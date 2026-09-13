@@ -15,7 +15,7 @@ import {
   FiLogIn,
   FiUserPlus,
 } from "react-icons/fi";
-
+import { useCartStore } from "@/store/cartStore";
 // Fix: dropdown hrefs previously combined a query string AND a hash
 // (e.g. "/?category=katan#product-filter"). Next.js's <Link> races the
 // hash-scroll against the query-driven re-render, which swallowed the
@@ -45,6 +45,13 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hoveredDropdown, setHoveredDropdown] = useState<string | null>(null);
   const [isUserHovered, setIsUserHovered] = useState(false);
+  // Cart state
+  const [mounted, setMounted] = useState(false);
+  const totalItems = useCartStore((state) => state.getTotalItems());
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -254,7 +261,11 @@ export default function Header() {
             }}
           >
             {/* Cart Icon */}
-            <IconButton href="/cart" icon={FiShoppingBag} badge="0" />
+            <IconButton
+              href="/cart"
+              icon={FiShoppingBag}
+              badge={mounted && totalItems > 0 ? String(totalItems) : undefined}
+            />
 
             {/* Search Icon */}
             <IconButton icon={FiSearch} isButton />

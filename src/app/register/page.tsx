@@ -65,7 +65,7 @@ export default function RegisterPage() {
         }}
       >
         <Image
-          src="/images/little_girl.jpg"
+          src="/images/register-image.png"
           alt="Little girl in traditional saree"
           fill
           style={{
@@ -147,8 +147,8 @@ export default function RegisterPage() {
               textShadow: "0 1px 10px rgba(0,0,0,0.3)",
             }}
           >
-            রেজিস্ট্রেশন করে পান বিশেষ ছাড়, নতুন কালেকশন আপডেট এবং
-            এক্সক্লুসিভ অফার।
+            রেজিস্ট্রেশন করে পান বিশেষ ছাড়, নতুন কালেকশন আপডেট এবং এক্সক্লুসিভ
+            অফার।
           </p>
         </div>
       </div>
@@ -171,8 +171,7 @@ export default function RegisterPage() {
               width: "56px",
               height: "56px",
               borderRadius: "16px",
-              background:
-                "linear-gradient(135deg, #FF6B8A 0%, #FF4081 100%)",
+              background: "linear-gradient(135deg, #FF6B8A 0%, #FF4081 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

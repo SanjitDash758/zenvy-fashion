@@ -3,15 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { WooProduct } from "@/lib/api";
 
-// ⚠️ আপনার নিজের ডিজাইনের slider images
-const sliderImages = [
-  "/images/কাতান-৪-মেরুন.jpg",
-  "/images/কাতান-৭-হলুদ.jpg",
-  "/images/জামদানী-১-অফ-হোয়াইট.jpg",
-  "/images/সুতি-শাড়ী-৯.png",
-  "/images/হাফ-সিল্ক-১.jpg",
-];
+interface HeroSectionProps {
+  featuredProducts: WooProduct[];
+}
 
 // Typing effect hook
 function useTypewriter(text: string, speed: number = 80, delay: number = 0) {
@@ -45,8 +41,16 @@ function useTypewriter(text: string, speed: number = 80, delay: number = 0) {
   return { displayed, isDone };
 }
 
-export default function HeroSection() {
+export default function HeroSection({ featuredProducts }: HeroSectionProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Extract image URLs from featured products
+  const sliderImages = featuredProducts
+    .map((product) => product.images[0]?.src)
+    .filter(Boolean) as string[];
+
+  // Fallback if no featured products
+  const imagesToShow = sliderImages.length > 0 ? sliderImages : [];
 
   // Typing effects
   const line1 = useTypewriter("ছোট্ট সোনামনির সাজে", 70, 300);
@@ -54,11 +58,12 @@ export default function HeroSection() {
 
   // Auto slide
   useEffect(() => {
+    if (imagesToShow.length === 0) return;
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % sliderImages.length);
+      setCurrentSlide((prev) => (prev + 1) % imagesToShow.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [imagesToShow.length]);
 
   return (
     <section
@@ -82,7 +87,7 @@ export default function HeroSection() {
         }}
       >
         {/* ============================================================
-            SVG DEFINITIONS: Clip paths for curved shapes
+            SVG DEFINITIONS: Clip paths
         ============================================================ */}
         <svg
           width="0"
@@ -128,20 +133,30 @@ export default function HeroSection() {
             zIndex: 2,
           }}
         >
-          {/* Background image — সুতি-শাড়ী-৮.png */}
-          <Image
-            src="/images/Hero-Left.png"
-            alt="Little girl wearing traditional saree"
-            fill
-            style={{
-              objectFit: "cover",
-              objectPosition: "center top",
-            }}
-            priority
-            unoptimized
-          />
+          {/* Left Image — প্রথম Featured Product-এর ছবি */}
+          {imagesToShow[0] ? (
+            <Image
+              src="/images/Hero-Left.png"
+              alt="Featured saree"
+              fill
+              style={{
+                objectFit: "cover",
+                objectPosition: "center top",
+              }}
+              priority
+              unoptimized
+            />
+          ) : (
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                backgroundColor: "#F5EFE6",
+              }}
+            />
+          )}
 
-          {/* Elegant gradient overlay for text readability */}
+          {/* Gradient overlay */}
           <div
             style={{
               position: "absolute",
@@ -170,7 +185,6 @@ export default function HeroSection() {
               zIndex: 2,
             }}
           >
-            {/* Heading with Typing Effect */}
             <h1
               style={{
                 fontFamily: "var(--font-cormorant), serif",
@@ -245,7 +259,7 @@ export default function HeroSection() {
             </p>
 
             <Link
-              href="/shop"
+              href="/#product-filter"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -283,7 +297,7 @@ export default function HeroSection() {
         </div>
 
         {/* ============================================================
-            RIGHT PANEL: Slider (overlaps left panel)
+            RIGHT PANEL: Slider from Featured Products
         ============================================================ */}
         <div
           style={{
@@ -298,35 +312,51 @@ export default function HeroSection() {
             backgroundColor: "transparent",
           }}
         >
-          {/* Slider Images — আপনার নিজের ডিজাইনের ছবি */}
-          {sliderImages.map((img, index) => (
+          {imagesToShow.length === 0 ? (
             <div
-              key={img}
               style={{
-                position: "absolute",
-                inset: 0,
-                opacity: index === currentSlide ? 1 : 0,
-                transition: "opacity 1.2s ease-in-out",
+                width: "100%",
+                height: "100%",
+                backgroundColor: "#F5EFE6",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#999999",
+                fontFamily: "var(--font-inter), sans-serif",
               }}
             >
-              <Image
-                src={img}
-                alt={`Premium baby saree collection ${index + 1}`}
-                fill
-                style={{
-                  objectFit: "cover",
-                  objectPosition: "center",
-                  transform:
-                    index === currentSlide ? "scale(1)" : "scale(1.05)",
-                  transition: "transform 4s ease-out",
-                }}
-                priority={index === 0}
-                unoptimized
-              />
+              কোনো Featured Product নেই
             </div>
-          ))}
+          ) : (
+            imagesToShow.map((img, index) => (
+              <div
+                key={img}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  opacity: index === currentSlide ? 1 : 0,
+                  transition: "opacity 1.2s ease-in-out",
+                }}
+              >
+                <Image
+                  src={img}
+                  alt={`Featured saree ${index + 1}`}
+                  fill
+                  style={{
+                    objectFit: "cover",
+                    objectPosition: "center",
+                    transform:
+                      index === currentSlide ? "scale(1)" : "scale(1.05)",
+                    transition: "transform 4s ease-out",
+                  }}
+                  priority={index === 0}
+                  unoptimized
+                />
+              </div>
+            ))
+          )}
 
-          {/* Premium Saree Badge — top right */}
+          {/* Premium Saree Badge */}
           <div
             style={{
               position: "absolute",
@@ -351,62 +381,65 @@ export default function HeroSection() {
           </div>
 
           {/* Slider Dots */}
-          <div
-            style={{
-              position: "absolute",
-              bottom: "32px",
-              right: "32px",
-              display: "flex",
-              gap: "8px",
-              zIndex: 10,
-            }}
-          >
-            {sliderImages.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                aria-label={`Go to slide ${index + 1}`}
-                style={{
-                  width: index === currentSlide ? "32px" : "8px",
-                  height: "8px",
-                  borderRadius: "999px",
-                  border: "none",
-                  cursor: "pointer",
-                  backgroundColor:
-                    index === currentSlide
-                      ? "#FF6B8A"
-                      : "rgba(255,255,255,0.9)",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                  transition: "all 0.4s ease",
-                  padding: 0,
-                }}
-              />
-            ))}
-          </div>
+          {imagesToShow.length > 1 && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: "32px",
+                right: "32px",
+                display: "flex",
+                gap: "8px",
+                zIndex: 10,
+              }}
+            >
+              {imagesToShow.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  aria-label={`Go to slide ${index + 1}`}
+                  style={{
+                    width: index === currentSlide ? "32px" : "8px",
+                    height: "8px",
+                    borderRadius: "999px",
+                    border: "none",
+                    cursor: "pointer",
+                    backgroundColor:
+                      index === currentSlide
+                        ? "#FF6B8A"
+                        : "rgba(255,255,255,0.9)",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                    transition: "all 0.4s ease",
+                    padding: 0,
+                  }}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Bottom-right counter */}
-          <div
-            style={{
-              position: "absolute",
-              bottom: "32px",
-              left: "calc(50% + 40px)",
-              fontFamily: "var(--font-cormorant), serif",
-              fontSize: "14px",
-              fontWeight: 500,
-              color: "rgba(255, 255, 255, 0.95)",
-              textShadow: "0 1px 10px rgba(0,0,0,0.5)",
-              letterSpacing: "1px",
-              zIndex: 3,
-            }}
-          >
-            {String(currentSlide + 1).padStart(2, "0")}
-            <span style={{ opacity: 0.6, margin: "0 4px" }}>/</span>
-            {String(sliderImages.length).padStart(2, "0")}
-          </div>
+          {imagesToShow.length > 0 && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: "32px",
+                left: "calc(50% + 40px)",
+                fontFamily: "var(--font-cormorant), serif",
+                fontSize: "14px",
+                fontWeight: 500,
+                color: "rgba(255, 255, 255, 0.95)",
+                textShadow: "0 1px 10px rgba(0,0,0,0.5)",
+                letterSpacing: "1px",
+                zIndex: 3,
+              }}
+            >
+              {String(currentSlide + 1).padStart(2, "0")}
+              <span style={{ opacity: 0.6, margin: "0 4px" }}>/</span>
+              {String(imagesToShow.length).padStart(2, "0")}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* CSS Keyframes for typing cursor blink */}
       <style jsx>{`
         @keyframes blink {
           0%,

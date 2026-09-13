@@ -13,8 +13,10 @@ import {
   FiShield,
   FiMinus,
   FiPlus,
+  FiCheck,
 } from "react-icons/fi";
 import { WooProduct } from "@/lib/api";
+import { useCartStore } from "@/store/cartStore";
 
 interface Variation {
   id: number;
@@ -45,6 +47,8 @@ export default function ProductDetailClient({
   );
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const addItem = useCartStore((state) => state.addItem);
+  const [showToast, setShowToast] = useState(false);
 
   // Get all images
   const images =
@@ -91,6 +95,35 @@ export default function ProductDetailClient({
   const selectedAgeValue = selectedVariation?.attributes.find(
     (attr) => attr.name === "Age",
   )?.option;
+  const handleAddToCart = () => {
+    if (!selectedVariation) return;
+    if (currentStockStatus !== "instock") return;
+
+    // Build selected attributes object
+    const selectedAttributes: { [key: string]: string } = {};
+    selectedVariation.attributes.forEach((attr) => {
+      selectedAttributes[attr.name] = attr.option;
+    });
+
+    // Add item to cart
+    addItem({
+      productId: product.id,
+      variationId: selectedVariation.id,
+      name: product.name,
+      image:
+        selectedVariation.image?.src ||
+        product.images[0]?.src ||
+        "/images/placeholder.jpg",
+      price: currentPrice,
+      quantity: quantity,
+      maxStock: selectedVariation.stock_quantity || 10,
+      selectedAttributes,
+    });
+
+    // Show toast
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2500);
+  };
 
   return (
     <main style={{ backgroundColor: "#FFFFFF", minHeight: "100vh" }}>
@@ -489,8 +522,9 @@ export default function ProductDetailClient({
                 </button>
               </div>
 
-              {/* Add to Cart */}
               <button
+                onClick={handleAddToCart}
+                disabled={currentStockStatus !== "instock"}
                 style={{
                   flex: 1,
                   minWidth: "200px",
@@ -500,30 +534,43 @@ export default function ProductDetailClient({
                   gap: "10px",
                   height: "52px",
                   padding: "0 32px",
-                  backgroundColor: "#FF6B8A",
+                  backgroundColor:
+                    currentStockStatus === "instock" ? "#FF6B8A" : "#CCCCCC",
                   color: "#FFFFFF",
                   fontFamily: "var(--font-inter), sans-serif",
                   fontSize: "14px",
                   fontWeight: 600,
                   border: "none",
                   borderRadius: "12px",
-                  cursor: "pointer",
+                  cursor:
+                    currentStockStatus === "instock"
+                      ? "pointer"
+                      : "not-allowed",
                   transition: "all 0.3s ease",
                   letterSpacing: "0.5px",
                   textTransform: "uppercase",
-                  boxShadow: "0 10px 30px rgba(255, 107, 138, 0.35)",
+                  boxShadow:
+                    currentStockStatus === "instock"
+                      ? "0 10px 30px rgba(255, 107, 138, 0.35)"
+                      : "none",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#FF4081";
-                  e.currentTarget.style.transform = "translateY(-2px)";
+                  if (currentStockStatus === "instock") {
+                    e.currentTarget.style.backgroundColor = "#FF4081";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#FF6B8A";
-                  e.currentTarget.style.transform = "translateY(0)";
+                  if (currentStockStatus === "instock") {
+                    e.currentTarget.style.backgroundColor = "#FF6B8A";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }
                 }}
               >
                 <FiShoppingBag size={18} strokeWidth={2.2} />
-                কার্টে যোগ করুন
+                {currentStockStatus === "instock"
+                  ? "কার্টে যোগ করুন"
+                  : "স্টক নেই"}
               </button>
 
               {/* Wishlist */}
@@ -665,11 +712,49 @@ export default function ProductDetailClient({
         )}
       </section>
 
+      {/* Success Toast */}
+      {showToast && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "32px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "#4CAF50",
+            color: "#FFFFFF",
+            padding: "14px 28px",
+            borderRadius: "12px",
+            fontFamily: "var(--font-inter), sans-serif",
+            fontSize: "14px",
+            fontWeight: 600,
+            boxShadow: "0 10px 30px rgba(76, 175, 80, 0.4)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            animation: "slideUp 0.3s ease",
+          }}
+        >
+          <FiCheck size={20} strokeWidth={3} />
+          কার্টে যোগ হয়েছে!
+        </div>
+      )}
+
       <style jsx>{`
         @media (max-width: 1024px) {
           .product-detail-grid {
             grid-template-columns: 1fr !important;
             gap: 32px !important;
+          }
+        }
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
           }
         }
       `}</style>

@@ -48,7 +48,7 @@ export default function LoginPage() {
         }}
       >
         <Image
-          src="/images/little_girl.jpg"
+          src="/images/login-page.png"
           alt="Little girl in traditional saree"
           fill
           style={{
@@ -133,8 +133,7 @@ export default function LoginPage() {
               textShadow: "0 1px 10px rgba(0,0,0,0.3)",
             }}
           >
-            আপনার ছোট্ট সোনামনির জন্য সেরা শাড়িগুলো এক্সপ্লোর করতে লগইন
-            করুন।
+            আপনার ছোট্ট সোনামনির জন্য সেরা শাড়িগুলো এক্সপ্লোর করতে লগইন করুন।
           </p>
         </div>
       </div>
@@ -161,8 +160,7 @@ export default function LoginPage() {
               width: "56px",
               height: "56px",
               borderRadius: "16px",
-              background:
-                "linear-gradient(135deg, #FF6B8A 0%, #FF4081 100%)",
+              background: "linear-gradient(135deg, #FF6B8A 0%, #FF4081 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

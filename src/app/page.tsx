@@ -5,9 +5,14 @@ import FeaturedProducts from "@/components/home/FeaturedProducts";
 import WhyZenvyFashion from "@/components/home/WhyZenvyFashion";
 // import GiftBanner from "@/components/home/GiftBanner";
 import Testimonials from "@/components/home/Testimonials";
-import { getProducts } from "@/lib/api";
+import { getProducts, getFeaturedProducts } from "@/lib/api";
 
 export const revalidate = 300;
+
+async function HeroSectionWrapper() {
+  const featuredProducts = await getFeaturedProducts(5);
+  return <HeroSection featuredProducts={featuredProducts} />;
+}
 
 async function ProductsSection() {
   const products = await getProducts();
@@ -21,7 +26,7 @@ async function ProductsSection() {
   );
 }
 
-function ProductsLoading() {
+function LoadingSection() {
   return (
     <div
       style={{
@@ -42,8 +47,10 @@ function ProductsLoading() {
 export default function Home() {
   return (
     <main>
-      <HeroSection />
-      <Suspense fallback={<ProductsLoading />}>
+      <Suspense fallback={<LoadingSection />}>
+        <HeroSectionWrapper />
+      </Suspense>
+      <Suspense fallback={<LoadingSection />}>
         <ProductsSection />
       </Suspense>
       <WhyZenvyFashion />

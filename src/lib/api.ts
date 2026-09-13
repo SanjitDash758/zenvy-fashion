@@ -88,12 +88,14 @@ export const getProductBySlug = async (
 };
 
 // ===== Fetch featured products =====
-export const getFeaturedProducts = async (): Promise<WooProduct[]> => {
+export const getFeaturedProducts = async (
+  limit: number = 5,
+): Promise<WooProduct[]> => {
   try {
     const response = await wooApi.get("/products", {
       params: {
         featured: true,
-        per_page: 8,
+        per_page: limit,
         status: "publish",
       },
     });
@@ -103,7 +105,6 @@ export const getFeaturedProducts = async (): Promise<WooProduct[]> => {
     return [];
   }
 };
-
 // ===== Fetch categories =====
 export const getCategories = async () => {
   try {

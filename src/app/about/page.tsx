@@ -294,7 +294,7 @@ export default function AboutPage() {
             }}
           >
             <Image
-              src="/images/zenvy-banner.jpg"
+              src="/images/about-page.jpg"
               alt="Our Story"
               fill
               style={{ objectFit: "cover" }}
