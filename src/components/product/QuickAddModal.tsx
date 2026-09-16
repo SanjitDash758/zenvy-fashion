@@ -12,7 +12,7 @@ import {
   FiZap,
 } from "react-icons/fi";
 import { WooProduct } from "@/lib/api";
-import { useCartStore } from "@/store/cartStore";
+import { useCartStore } from "../../store/cartStore";
 
 interface Variation {
   id: number;
@@ -566,7 +566,8 @@ export default function QuickAddModal({
                 fontSize: "16px",
                 fontWeight: 600,
                 textAlign: "center",
-                paddingHorizontal: "20px",
+                paddingLeft: "20px",
+                paddingRight: "20px",
               }}
             >
               {toastMessage}

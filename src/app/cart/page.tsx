@@ -11,7 +11,7 @@ import {
   FiShoppingBag,
   FiArrowLeft,
 } from "react-icons/fi";
-import { useCartStore } from "@/store/cartStore";
+import { useCartStore } from "../../store/cartStore";
 
 export default function CartPage() {
   const items = useCartStore((state) => state.items);
