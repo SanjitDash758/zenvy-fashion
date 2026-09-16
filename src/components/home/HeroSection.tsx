@@ -295,7 +295,7 @@ export default function HeroSection({ featuredProducts }: HeroSectionProps) {
           {imagesToShow[0] ? (
             <div className="hero-left-image-wrapper">
               <Image
-                src={imagesToShow[0]}
+                src="/images/Hero-Left.png" // imagesToShow[0]
                 alt="Featured saree"
                 fill
                 style={{
