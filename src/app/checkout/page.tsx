@@ -14,7 +14,7 @@ import {
   FiCheck,
   FiAlertCircle,
 } from "react-icons/fi";
-import { useCartStore } from "../../store/cartStore";
+import { useCartStore } from "@/store/cartStore";
 
 const WHATSAPP_NUMBER = "8801335620792"; // Bangladesh format
 

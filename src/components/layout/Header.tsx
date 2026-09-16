@@ -15,7 +15,7 @@ import {
   FiLogIn,
   FiUserPlus,
 } from "react-icons/fi";
-import { useCartStore } from "../../store/cartStore";
+import { useCartStore } from "@/store/cartStore";
 import { WooProduct } from "@/lib/api";
 import SearchModal from "@/components/search/SearchModal";
 import QuickAddModal from "@/components/product/QuickAddModal";

@@ -12,7 +12,7 @@ import {
   FiZap,
 } from "react-icons/fi";
 import { WooProduct } from "@/lib/api";
-import { useCartStore } from "../../store/cartStore";
+import { useCartStore } from "@/store/cartStore";
 
 interface Variation {
   id: number;
