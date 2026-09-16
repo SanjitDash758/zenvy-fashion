@@ -1,8 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { FiX, FiMinus, FiPlus, FiShoppingBag, FiCheck } from "react-icons/fi";
+import {
+  FiX,
+  FiMinus,
+  FiPlus,
+  FiShoppingBag,
+  FiCheck,
+  FiZap,
+} from "react-icons/fi";
 import { WooProduct } from "@/lib/api";
 import { useCartStore } from "@/store/cartStore";
 
@@ -24,6 +32,7 @@ interface QuickAddModalProps {
   variations: Variation[];
   isOpen: boolean;
   onClose: () => void;
+  mode?: "cart" | "buy";
 }
 
 export default function QuickAddModal({
@@ -31,13 +40,17 @@ export default function QuickAddModal({
   variations,
   isOpen,
   onClose,
+  mode = "cart",
 }: QuickAddModalProps) {
+  // ===== ALL HOOKS AT THE TOP (Rules of Hooks) =====
+  const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
   const [selectedVariation, setSelectedVariation] = useState<Variation | null>(
     null,
   );
   const [quantity, setQuantity] = useState(1);
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("কার্টে যোগ হয়েছে!");
 
   // Reset state when modal opens
   useEffect(() => {
@@ -59,31 +72,10 @@ export default function QuickAddModal({
     };
   }, [isOpen]);
 
+  // ===== AFTER ALL HOOKS, NOW WE CAN HAVE CONDITIONAL RETURN =====
   if (!isOpen || !product) return null;
 
-  
-  // Debug (remove later)
-  if (isOpen) {
-    console.log("=== QuickAddModal Debug ===");
-    console.log("Product:", product.name);
-    console.log("Variations count:", variations.length);
-    console.log("Variations:", JSON.stringify(variations, null, 2));
-    console.log("Selected variation:", selectedVariation);
-    console.log(
-      "Age attribute:",
-      JSON.stringify(
-        product.attributes.find((a) => a.name === "Age"),
-        null,
-        2,
-      ),
-    );
-    console.log(
-      "Age options:",
-      product.attributes.find((a) => a.name === "Age")?.options,
-    );
-    console.log("===========================");
-  }
-
+  // ===== NON-HOOK LOGIC BELOW =====
   const currentPrice = selectedVariation
     ? parseFloat(selectedVariation.price) || 0
     : parseFloat(product.price) || 0;
@@ -92,7 +84,6 @@ export default function QuickAddModal({
     ? selectedVariation.stock_status
     : product.stock_status;
 
-  // Extract Age attribute options
   const ageAttribute = product.attributes.find((attr) => attr.name === "Age");
   const ageOptions = ageAttribute?.options || [];
 
@@ -108,15 +99,13 @@ export default function QuickAddModal({
     );
     if (variation) {
       setSelectedVariation(variation);
-    } else {
-      console.warn("Variation not found for age:", ageValue);
-      console.log("Available variations:", variations);
     }
   };
 
-  const handleAddToCart = () => {
-    if (!selectedVariation) return;
-    if (currentStockStatus !== "instock") return;
+  // Helper: add item to cart
+  const addToCartInternal = () => {
+    if (!selectedVariation) return false;
+    if (currentStockStatus !== "instock") return false;
 
     const selectedAttributes: { [key: string]: string } = {};
     selectedVariation.attributes.forEach((attr) => {
@@ -137,10 +126,33 @@ export default function QuickAddModal({
       selectedAttributes,
     });
 
+    return true;
+  };
+
+  // 🛒 Add to Cart only
+  const handleAddToCart = () => {
+    if (!addToCartInternal()) return;
+
+    setToastMessage("কার্টে যোগ হয়েছে!");
     setShowToast(true);
+
     setTimeout(() => {
       setShowToast(false);
       onClose();
+    }, 1500);
+  };
+
+  // ⚡ Buy Now — Cart-এ যোগ করে Checkout-এ যাবে
+  const handleBuyNow = () => {
+    if (!addToCartInternal()) return;
+
+    setToastMessage("Cart-এ যোগ হয়েছে — Checkout-এ নিয়ে যাচ্ছি...");
+    setShowToast(true);
+
+    setTimeout(() => {
+      setShowToast(false);
+      onClose();
+      router.push("/checkout");
     }, 1500);
   };
 
@@ -155,7 +167,8 @@ export default function QuickAddModal({
           backgroundColor: "rgba(0, 0, 0, 0.5)",
           backdropFilter: "blur(4px)",
           WebkitBackdropFilter: "blur(4px)",
-          zIndex: 9998,
+          zIndex: 99998,
+          pointerEvents: "auto",
           animation: "fadeIn 0.2s ease",
         }}
       />
@@ -173,7 +186,8 @@ export default function QuickAddModal({
           backgroundColor: "#FFFFFF",
           borderRadius: "24px",
           boxShadow: "0 30px 80px rgba(0, 0, 0, 0.25)",
-          zIndex: 9999,
+          zIndex: 99999,
+          pointerEvents: "auto",
           animation: "slideUp 0.3s ease",
         }}
       >
@@ -418,54 +432,104 @@ export default function QuickAddModal({
             </div>
           </div>
 
-          {/* Add to Cart Button */}
-          <button
-            onClick={handleAddToCart}
-            disabled={currentStockStatus !== "instock"}
+          {/* Action Buttons — 2 buttons side by side */}
+          <div
             style={{
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
               gap: "10px",
-              padding: "14px 24px",
-              backgroundColor:
-                currentStockStatus === "instock" ? "#FF6B8A" : "#CCCCCC",
-              color: "#FFFFFF",
-              fontFamily: "var(--font-inter), sans-serif",
-              fontSize: "14px",
-              fontWeight: 600,
-              border: "none",
-              borderRadius: "12px",
-              cursor:
-                currentStockStatus === "instock" ? "pointer" : "not-allowed",
-              transition: "all 0.3s ease",
-              letterSpacing: "0.3px",
-              textTransform: "uppercase",
-              boxShadow:
-                currentStockStatus === "instock"
-                  ? "0 10px 30px rgba(255, 107, 138, 0.35)"
-                  : "none",
-            }}
-            onMouseEnter={(e) => {
-              if (currentStockStatus === "instock") {
-                e.currentTarget.style.backgroundColor = "#FF4081";
-                e.currentTarget.style.transform = "translateY(-2px)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (currentStockStatus === "instock") {
-                e.currentTarget.style.backgroundColor = "#FF6B8A";
-                e.currentTarget.style.transform = "translateY(0)";
-              }
             }}
           >
-            <FiShoppingBag size={18} strokeWidth={2.2} />
-            কার্টে যোগ করুন
-          </button>
+            {/* Add to Cart Button */}
+            <button
+              onClick={handleAddToCart}
+              disabled={currentStockStatus !== "instock"}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+                padding: "14px 12px",
+                backgroundColor: "transparent",
+                color: currentStockStatus === "instock" ? "#FF6B8A" : "#CCCCCC",
+                fontFamily: "var(--font-inter), sans-serif",
+                fontSize: "12px",
+                fontWeight: 600,
+                border: `1.5px solid ${
+                  currentStockStatus === "instock" ? "#FF6B8A" : "#CCCCCC"
+                }`,
+                borderRadius: "12px",
+                cursor:
+                  currentStockStatus === "instock" ? "pointer" : "not-allowed",
+                transition: "all 0.3s ease",
+                letterSpacing: "0.3px",
+                textTransform: "uppercase",
+                boxSizing: "border-box",
+              }}
+              onMouseEnter={(e) => {
+                if (currentStockStatus === "instock") {
+                  e.currentTarget.style.backgroundColor = "#FF6B8A";
+                  e.currentTarget.style.color = "#FFFFFF";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (currentStockStatus === "instock") {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.color = "#FF6B8A";
+                }
+              }}
+            >
+              <FiShoppingBag size={15} strokeWidth={2.2} />
+              কার্টে যোগ
+            </button>
+
+            {/* Buy Now Button */}
+            <button
+              onClick={handleBuyNow}
+              disabled={currentStockStatus !== "instock"}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+                padding: "14px 12px",
+                backgroundColor:
+                  currentStockStatus === "instock" ? "#FF6B8A" : "#CCCCCC",
+                color: "#FFFFFF",
+                fontFamily: "var(--font-inter), sans-serif",
+                fontSize: "12px",
+                fontWeight: 600,
+                border: "none",
+                borderRadius: "12px",
+                cursor:
+                  currentStockStatus === "instock" ? "pointer" : "not-allowed",
+                transition: "all 0.3s ease",
+                letterSpacing: "0.3px",
+                textTransform: "uppercase",
+                boxShadow:
+                  currentStockStatus === "instock"
+                    ? "0 10px 30px rgba(255, 107, 138, 0.35)"
+                    : "none",
+                boxSizing: "border-box",
+              }}
+              onMouseEnter={(e) => {
+                if (currentStockStatus === "instock") {
+                  e.currentTarget.style.backgroundColor = "#FF4081";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (currentStockStatus === "instock") {
+                  e.currentTarget.style.backgroundColor = "#FF6B8A";
+                }
+              }}
+            >
+              <FiZap size={15} strokeWidth={2.2} />
+              এখনই কিনুন
+            </button>
+          </div>
         </div>
 
-        {/* Success Toast — inside modal */}
+        {/* Success Toast */}
         {showToast && (
           <div
             style={{
@@ -501,9 +565,11 @@ export default function QuickAddModal({
                 fontFamily: "var(--font-inter), sans-serif",
                 fontSize: "16px",
                 fontWeight: 600,
+                textAlign: "center",
+                paddingHorizontal: "20px",
               }}
             >
-              কার্টে যোগ হয়েছে!
+              {toastMessage}
             </span>
           </div>
         )}

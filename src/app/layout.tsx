@@ -5,6 +5,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import StickySocial from "@/components/layout/StickySocial";
 import ScrollToTop from "@/components/layout/ScrollToTop";
+import { getProducts } from "@/lib/api";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -25,13 +26,16 @@ export const metadata: Metadata = {
   description: "Premium baby and kids saree collection for special occasions",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetch products for search functionality
+  const products = await getProducts();
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <body
         className={`${cormorant.variable} ${inter.variable}`}
         style={{
@@ -43,7 +47,7 @@ export default function RootLayout({
         }}
         suppressHydrationWarning
       >
-        <Header />
+        <Header products={products} />
         <StickySocial />
         <main>{children}</main>
         <Footer />

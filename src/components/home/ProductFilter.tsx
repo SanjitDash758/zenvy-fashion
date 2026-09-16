@@ -12,6 +12,7 @@ import {
   FiShoppingBag,
   FiStar,
   FiLoader,
+  FiZap,
 } from "react-icons/fi";
 import { WooProduct } from "@/lib/api";
 import QuickAddModal from "@/components/product/QuickAddModal";
@@ -28,15 +29,6 @@ const categories = [
   { name: "সুতি শাড়ী", slug: "suti" },
   { name: "হাফ সিল্ক", slug: "half-silk" },
   { name: "কাঞ্জিভরম", slug: "kanchibaram" },
-];
-
-const colors = [
-  { name: "লাল", value: "#E53935", slug: "red" },
-  { name: "গোলাপী", value: "#FF6B8A", slug: "pink" },
-  { name: "নীল", value: "#1E88E5", slug: "blue" },
-  { name: "সাদা", value: "#FFFFFF", slug: "white" },
-  { name: "হলুদ", value: "#FDD835", slug: "yellow" },
-  { name: "সবুজ", value: "#43A047", slug: "green" },
 ];
 
 const ages = [
@@ -72,8 +64,12 @@ export default function ProductFilter({ products }: ProductFilterProps) {
   );
   const [modalVariations, setModalVariations] = useState<any[]>([]);
   const [loadingProductId, setLoadingProductId] = useState<number | null>(null);
+  const [modalMode, setModalMode] = useState<"cart" | "buy">("cart");
 
-  const handleQuickAdd = async (product: WooProduct) => {
+  const handleQuickAdd = async (
+    product: WooProduct,
+    mode: "cart" | "buy" = "cart",
+  ) => {
     setLoadingProductId(product.id);
     try {
       const response = await fetch(`/api/variations/${product.id}`);
@@ -83,6 +79,7 @@ export default function ProductFilter({ products }: ProductFilterProps) {
       const variations = await response.json();
       setSelectedProduct(product);
       setModalVariations(variations);
+      setModalMode(mode);
       setModalOpen(true);
     } catch (error) {
       console.error("Error loading variations:", error);
@@ -139,11 +136,6 @@ export default function ProductFilter({ products }: ProductFilterProps) {
       }
     }
 
-    if (colorParam) {
-      const exists = colors.find((c) => c.slug === colorParam);
-      if (exists) setSelectedColor(colorParam);
-    }
-
     if (ageParam) {
       const exists = ages.find((a) => a.slug === ageParam);
       if (exists) setSelectedAge(ageParam);
@@ -179,6 +171,26 @@ export default function ProductFilter({ products }: ProductFilterProps) {
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
   };
+  // Auto-scroll to products when filter changes
+  const scrollToProducts = () => {
+    if (typeof window === "undefined") return;
+
+    // Small delay to allow state update and re-render
+    setTimeout(() => {
+      const productsSection = document.querySelector(".filtered-products-grid");
+      if (productsSection) {
+        const offsetTop =
+          (productsSection as HTMLElement).getBoundingClientRect().top +
+          window.scrollY -
+          120; // 120px offset for sticky header
+
+        window.scrollTo({
+          top: offsetTop,
+          behavior: "smooth",
+        });
+      }
+    }, 150);
+  };
 
   const resetFilters = () => {
     setSelectedCategory("all");
@@ -213,20 +225,6 @@ export default function ProductFilter({ products }: ProductFilterProps) {
         p.attributes.some(
           (attr) =>
             attr.name === "Age" && attr.options.some((opt) => opt === ageLabel),
-        ),
-      );
-    }
-
-    // Filter by color (currently no color attribute, so skip if empty)
-    if (selectedColor) {
-      result = result.filter((p) =>
-        p.attributes.some(
-          (attr) =>
-            attr.name === "Color" &&
-            attr.options.some((opt) => {
-              const colorObj = colors.find((c) => c.slug === selectedColor);
-              return colorObj && opt === colorObj.name;
-            }),
         ),
       );
     }
@@ -267,6 +265,7 @@ export default function ProductFilter({ products }: ProductFilterProps) {
     <>
       <section
         id="product-filter"
+        className="product-filter-section"
         style={{
           width: "100%",
           padding: "80px 24px",
@@ -276,8 +275,12 @@ export default function ProductFilter({ products }: ProductFilterProps) {
       >
         <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           {/* Heading */}
-          <div style={{ textAlign: "center", marginBottom: "48px" }}>
+          <div
+            className="filter-heading-section"
+            style={{ textAlign: "center", marginBottom: "48px" }}
+          >
             <span
+              className="filter-heading-label"
               style={{
                 display: "inline-block",
                 fontFamily: "var(--font-inter), sans-serif",
@@ -292,6 +295,7 @@ export default function ProductFilter({ products }: ProductFilterProps) {
               Find Your Perfect Saree
             </span>
             <h2
+              className="filter-heading"
               style={{
                 fontFamily: "var(--font-cormorant), serif",
                 fontSize: "clamp(28px, 3vw, 42px)",
@@ -333,6 +337,7 @@ export default function ProductFilter({ products }: ProductFilterProps) {
               }}
             >
               <div
+                className="filter-header"
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -347,6 +352,7 @@ export default function ProductFilter({ products }: ProductFilterProps) {
                 >
                   <FiSearch size={16} style={{ color: "#FF6B8A" }} />
                   <h3
+                    className="filter-title"
                     style={{
                       fontFamily: "var(--font-cormorant), serif",
                       fontSize: "18px",
@@ -428,7 +434,10 @@ export default function ProductFilter({ products }: ProductFilterProps) {
                         name="category"
                         value={cat.slug}
                         checked={selectedCategory === cat.slug}
-                        onChange={() => setSelectedCategory(cat.slug)}
+                        onChange={() => {
+                          setSelectedCategory(cat.slug);
+                          scrollToProducts();
+                        }}
                         style={{
                           accentColor: "#FF6B8A",
                           cursor: "pointer",
@@ -438,53 +447,6 @@ export default function ProductFilter({ products }: ProductFilterProps) {
                       />
                       {cat.name}
                     </label>
-                  ))}
-                </div>
-              </FilterSection>
-
-              {/* Color Filter */}
-              <FilterSection
-                title="রঙ"
-                isOpen={openSection === "color"}
-                onToggle={() => toggleSection("color")}
-                badge={
-                  selectedColor
-                    ? colors.find((c) => c.slug === selectedColor)?.name
-                    : undefined
-                }
-              >
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                  {colors.map((color) => (
-                    <button
-                      key={color.slug}
-                      onClick={() =>
-                        setSelectedColor(
-                          selectedColor === color.slug ? "" : color.slug,
-                        )
-                      }
-                      aria-label={color.name}
-                      title={color.name}
-                      style={{
-                        width: "32px",
-                        height: "32px",
-                        borderRadius: "50%",
-                        backgroundColor: color.value,
-                        border:
-                          selectedColor === color.slug
-                            ? "2px solid #FF6B8A"
-                            : "2px solid rgba(0, 0, 0, 0.1)",
-                        cursor: "pointer",
-                        transition: "all 0.25s ease",
-                        boxShadow:
-                          selectedColor === color.slug
-                            ? "0 0 0 3px rgba(255, 107, 138, 0.2)"
-                            : "0 2px 6px rgba(0, 0, 0, 0.08)",
-                        transform:
-                          selectedColor === color.slug
-                            ? "scale(1.05)"
-                            : "scale(1)",
-                      }}
-                    />
                   ))}
                 </div>
               </FilterSection>
@@ -581,7 +543,10 @@ export default function ProductFilter({ products }: ProductFilterProps) {
                         name="occasion"
                         value={occ.slug}
                         checked={selectedOccasion === occ.slug}
-                        onChange={() => setSelectedOccasion(occ.slug)}
+                        onChange={() => {
+                          setSelectedOccasion(occ.slug);
+                          scrollToProducts();
+                        }}
                         style={{
                           accentColor: "#FF6B8A",
                           cursor: "pointer",
@@ -633,6 +598,8 @@ export default function ProductFilter({ products }: ProductFilterProps) {
                     step="100"
                     value={priceRange}
                     onChange={(e) => setPriceRange(Number(e.target.value))}
+                    onMouseUp={scrollToProducts}
+                    onTouchEnd={scrollToProducts}
                     className="price-slider"
                     style={{ width: "100%", accentColor: "#FF6B8A" }}
                   />
@@ -654,6 +621,7 @@ export default function ProductFilter({ products }: ProductFilterProps) {
                 }}
               >
                 <p
+                  className="products-counter"
                   style={{
                     fontFamily: "var(--font-inter), sans-serif",
                     fontSize: "14px",
@@ -663,6 +631,7 @@ export default function ProductFilter({ products }: ProductFilterProps) {
                 >
                   দেখানো হচ্ছে{" "}
                   <span
+                    className="products-counter-count"
                     style={{
                       color: "#FF6B8A",
                       fontWeight: 700,
@@ -674,8 +643,12 @@ export default function ProductFilter({ products }: ProductFilterProps) {
                   টি প্রোডাক্ট
                 </p>
                 <select
+                  className="sort-dropdown"
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
+                  onChange={(e) => {
+                    setSortBy(e.target.value);
+                    scrollToProducts();
+                  }}
                   style={{
                     padding: "8px 14px",
                     fontFamily: "var(--font-inter), sans-serif",
@@ -828,52 +801,109 @@ export default function ProductFilter({ products }: ProductFilterProps) {
                             />
                           </button>
 
-                          <button
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleQuickAdd(product);
-                            }}
-                            disabled={loadingProductId === product.id}
-                            className="filter-add-cart"
-                            aria-label="Quick add to cart"
+                          {/* Action Buttons — Add to Cart + Buy Now */}
+                          <div
+                            className="filter-product-actions"
                             style={{
                               position: "absolute",
                               bottom: "10px",
+                              left: "10px",
                               right: "10px",
-                              width: "34px",
-                              height: "34px",
-                              borderRadius: "50%",
-                              backgroundColor:
-                                loadingProductId === product.id
-                                  ? "#CCCCCC"
-                                  : "#FF6B8A",
-                              color: "#FFFFFF",
-                              border: "none",
-                              cursor:
-                                loadingProductId === product.id
-                                  ? "wait"
-                                  : "pointer",
                               display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              transition: "all 0.3s ease",
+                              gap: "6px",
                               opacity: 0,
                               transform: "translateY(10px)",
-                              boxShadow: "0 6px 20px rgba(255, 107, 138, 0.4)",
+                              transition: "all 0.3s ease",
                               zIndex: 5,
                             }}
                           >
-                            {loadingProductId === product.id ? (
-                              <FiLoader
-                                size={15}
-                                strokeWidth={2.2}
-                                style={{ animation: "spin 1s linear infinite" }}
-                              />
-                            ) : (
-                              <FiShoppingBag size={15} strokeWidth={2.2} />
-                            )}
-                          </button>
+                            {/* Add to Cart */}
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleQuickAdd(product, "cart");
+                              }}
+                              disabled={loadingProductId === product.id}
+                              aria-label="Add to cart"
+                              style={{
+                                flex: 1,
+                                height: "34px",
+                                borderRadius: "10px",
+                                backgroundColor:
+                                  loadingProductId === product.id
+                                    ? "#CCCCCC"
+                                    : "rgba(255, 255, 255, 0.95)",
+                                color:
+                                  loadingProductId === product.id
+                                    ? "#FFFFFF"
+                                    : "#FF6B8A",
+                                border: "1.5px solid #FF6B8A",
+                                cursor:
+                                  loadingProductId === product.id
+                                    ? "wait"
+                                    : "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "4px",
+                                fontFamily: "var(--font-inter), sans-serif",
+                                fontSize: "10px",
+                                fontWeight: 600,
+                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                              }}
+                            >
+                              {loadingProductId === product.id ? (
+                                <FiLoader
+                                  size={12}
+                                  style={{
+                                    animation: "spin 1s linear infinite",
+                                  }}
+                                />
+                              ) : (
+                                <FiShoppingBag size={12} strokeWidth={2.5} />
+                              )}
+                              কার্টে
+                            </button>
+
+                            {/* Buy Now */}
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleQuickAdd(product, "buy");
+                              }}
+                              disabled={loadingProductId === product.id}
+                              aria-label="Buy now"
+                              style={{
+                                flex: 1,
+                                height: "34px",
+                                borderRadius: "10px",
+                                backgroundColor:
+                                  loadingProductId === product.id
+                                    ? "#CCCCCC"
+                                    : "#FF6B8A",
+                                color: "#FFFFFF",
+                                border: "1.5px solid #FF6B8A",
+                                cursor:
+                                  loadingProductId === product.id
+                                    ? "wait"
+                                    : "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "4px",
+                                fontFamily: "var(--font-inter), sans-serif",
+                                fontSize: "10px",
+                                fontWeight: 600,
+                                boxShadow:
+                                  "0 6px 20px rgba(255, 107, 138, 0.4)",
+                              }}
+                            >
+                              <FiZap size={12} strokeWidth={2.5} />
+                              কিনুন
+                            </button>
+                          </div>
                         </div>
 
                         <div style={{ padding: "12px 14px 14px" }}>
@@ -957,18 +987,14 @@ export default function ProductFilter({ products }: ProductFilterProps) {
               transform: rotate(360deg);
             }
           }
+
           .filter-product-card:hover .filter-product-image {
             transform: scale(1.08);
           }
 
-          .filter-product-card:hover .filter-add-cart {
+          .filter-product-card:hover .filter-product-actions {
             opacity: 1 !important;
             transform: translateY(0) !important;
-          }
-
-          .filter-add-cart:hover {
-            background-color: #ff4081 !important;
-            transform: scale(1.1) !important;
           }
 
           .price-slider {
@@ -1006,21 +1032,103 @@ export default function ProductFilter({ products }: ProductFilterProps) {
             cursor: pointer;
           }
 
+          /* ===== TABLET (max 1024px) ===== */
           @media (max-width: 1024px) {
             .filter-container {
               grid-template-columns: 1fr !important;
+              gap: 24px !important;
             }
+
             .filter-sidebar {
               position: static !important;
+              top: auto !important;
             }
+
             .filtered-products-grid {
               grid-template-columns: repeat(2, 1fr) !important;
             }
           }
 
-          @media (max-width: 640px) {
+          /* ===== MOBILE (max 768px) ===== */
+          @media (max-width: 768px) {
+            .product-filter-section {
+              padding: 40px 16px !important;
+            }
+
+            .filter-heading-section {
+              margin-bottom: 24px !important;
+            }
+
+            .filter-heading {
+              font-size: 24px !important;
+            }
+
+            .filter-heading-label {
+              font-size: 10px !important;
+              letter-spacing: 2px !important;
+            }
+
+            .filter-container {
+              grid-template-columns: 1fr !important;
+              gap: 20px !important;
+            }
+
+            /* Filter Sidebar — Full width, not sticky */
+            .filter-sidebar {
+              position: static !important;
+              top: auto !important;
+              width: 100% !important;
+              padding: 16px !important;
+              border-radius: 20px !important;
+              margin-bottom: 8px !important;
+            }
+
+            .filter-header {
+              margin-bottom: 12px !important;
+              padding-bottom: 12px !important;
+            }
+
+            .filter-title {
+              font-size: 16px !important;
+            }
+
+            /* Product Grid — 1 column on mobile */
             .filtered-products-grid {
               grid-template-columns: 1fr !important;
+              gap: 16px !important;
+            }
+
+            .products-counter {
+              font-size: 13px !important;
+            }
+
+            .products-counter-count {
+              font-size: 15px !important;
+            }
+
+            .sort-dropdown {
+              font-size: 12px !important;
+              padding: 8px 12px !important;
+            }
+          }
+
+          /* ===== SMALL MOBILE (max 480px) ===== */
+          @media (max-width: 480px) {
+            .product-filter-section {
+              padding: 32px 12px !important;
+            }
+
+            .filter-heading {
+              font-size: 22px !important;
+            }
+
+            .filter-sidebar {
+              padding: 14px 12px !important;
+              border-radius: 16px !important;
+            }
+
+            .filtered-products-grid {
+              gap: 14px !important;
             }
           }
         `}</style>
@@ -1031,6 +1139,7 @@ export default function ProductFilter({ products }: ProductFilterProps) {
         variations={modalVariations}
         isOpen={modalOpen}
         onClose={handleCloseModal}
+        mode={modalMode}
       />
     </>
   );

@@ -16,6 +16,9 @@ import {
   FiUserPlus,
 } from "react-icons/fi";
 import { useCartStore } from "@/store/cartStore";
+import { WooProduct } from "@/lib/api";
+import SearchModal from "@/components/search/SearchModal";
+import QuickAddModal from "@/components/product/QuickAddModal";
 // Fix: dropdown hrefs previously combined a query string AND a hash
 // (e.g. "/?category=katan#product-filter"). Next.js's <Link> races the
 // hash-scroll against the query-driven re-render, which swallowed the
@@ -40,7 +43,7 @@ const navLinks = [
   { name: "About", href: "/about", icon: FiInfo },
 ];
 
-export default function Header() {
+export default function Header({ products = [] }: { products?: WooProduct[] }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hoveredDropdown, setHoveredDropdown] = useState<string | null>(null);
@@ -48,6 +51,65 @@ export default function Header() {
   // Cart state
   const [mounted, setMounted] = useState(false);
   const totalItems = useCartStore((state) => state.getTotalItems());
+  // Search state
+  // Search state
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Quick Add Modal state (global — usable from any component)
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [quickAddProduct, setQuickAddProduct] = useState<WooProduct | null>(
+    null,
+  );
+  const [quickAddVariations, setQuickAddVariations] = useState<any[]>([]);
+  const [quickAddMode, setQuickAddMode] = useState<"cart" | "buy">("cart");
+  const [loadingProductId, setLoadingProductId] = useState<number | null>(null);
+
+  const handleQuickAdd = async (product: WooProduct, mode: "cart" | "buy") => {
+    console.log("🟠 handleQuickAdd START:", product.id, mode);
+    setLoadingProductId(product.id);
+
+    try {
+      const response = await fetch(`/api/variations/${product.id}`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const variations = await response.json();
+
+      if (!Array.isArray(variations)) {
+        throw new Error("Invalid variations response");
+      }
+
+      console.log("🟢 variations fetched:", variations.length);
+
+      // ⚠️ First close search modal
+      setSearchOpen(false);
+
+      // Then open QuickAdd modal
+      setTimeout(() => {
+        setQuickAddProduct(product);
+        setQuickAddVariations(variations);
+        setQuickAddMode(mode);
+        setQuickAddOpen(true);
+      }, 100);
+    } catch (error: any) {
+      console.error("🔴 Error:", error.message);
+      alert(`Variation লোড করতে সমস্যা: ${error.message}`);
+    } finally {
+      setLoadingProductId(null);
+    }
+  };
+
+  const handleQuickAddClose = () => {
+    setQuickAddOpen(false);
+    setQuickAddProduct(null);
+    setQuickAddVariations([]);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -63,6 +125,7 @@ export default function Header() {
 
   return (
     <div
+      className="header-wrapper"
       style={{
         position: "sticky",
         top: 0,
@@ -88,6 +151,7 @@ export default function Header() {
         }}
       >
         <div
+          className="header-content"
           style={{
             display: "flex",
             alignItems: "center",
@@ -95,6 +159,7 @@ export default function Header() {
             padding: isScrolled ? "10px 32px" : "14px 32px",
             transition: "all 0.3s ease",
             position: "relative",
+            gap: "12px",
           }}
         >
           {/* ===== LOGO ===== */}
@@ -120,6 +185,7 @@ export default function Header() {
                 transformOrigin: "left center",
               }}
               priority
+              className="header-logo"
             />
           </Link>
 
@@ -252,10 +318,11 @@ export default function Header() {
 
           {/* ===== RIGHT ICONS ===== */}
           <div
+            className="header-right-icons"
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "6px",
+              gap: "0px",
               flexShrink: 0,
               position: "relative",
             }}
@@ -268,10 +335,40 @@ export default function Header() {
             />
 
             {/* Search Icon */}
-            <IconButton icon={FiSearch} isButton />
+            <button
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search"
+              className="header-icon-button"
+              style={{
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                color: "#333333",
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                transition: "all 0.25s ease",
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#FCE4EC";
+                e.currentTarget.style.color = "#FF6B8A";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+                e.currentTarget.style.color = "#333333";
+              }}
+            >
+              <FiSearch size={20} />
+            </button>
 
             {/* Login/User Icon with hover menu */}
             <div
+              className="header-icon-wrapper"
               style={{ position: "relative" }}
               onMouseEnter={() => setIsUserHovered(true)}
               onMouseLeave={() => setIsUserHovered(false)}
@@ -279,22 +376,23 @@ export default function Header() {
               <Link
                 href="/login"
                 aria-label="Account"
+                className="header-icon-button"
                 style={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: "40px",
-                  height: "40px",
+                  width: "48px",
+                  height: "48px",
                   borderRadius: "50%",
                   color: isUserHovered ? "#FF6B8A" : "#333333",
                   textDecoration: "none",
                   backgroundColor: isUserHovered ? "#FCE4EC" : "transparent",
                   transition: "all 0.25s ease",
+                  flexShrink: 0,
                 }}
               >
-                <FiUser size={18} />
+                <FiUser size={20} />
               </Link>
-
               {/* ===== USER DROPDOWN (right-aligned, different animation) ===== */}
               {isUserHovered && (
                 <div
@@ -388,16 +486,17 @@ export default function Header() {
                 display: "none",
                 alignItems: "center",
                 justifyContent: "center",
-                width: "40px",
-                height: "40px",
+                width: "48px",
+                height: "48px",
                 borderRadius: "50%",
                 background: "transparent",
                 border: "none",
                 cursor: "pointer",
                 color: "#333333",
+                flexShrink: 0,
               }}
             >
-              {isMobileMenuOpen ? <FiX size={22} /> : <FiMenu size={22} />}
+              {isMobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
             </button>
           </div>
         </div>
@@ -531,6 +630,23 @@ export default function Header() {
           </div>
         )}
       </header>
+      {/* ===== Search Modal ===== */}
+      <SearchModal
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        products={products}
+        onQuickAdd={handleQuickAdd}
+        loadingProductId={loadingProductId}
+      />
+
+      {/* ===== Quick Add Modal (Global) ===== */}
+      <QuickAddModal
+        product={quickAddProduct}
+        variations={quickAddVariations}
+        isOpen={quickAddOpen}
+        onClose={handleQuickAddClose}
+        mode={quickAddMode}
+      />
 
       {/* ===== CSS ANIMATIONS ===== */}
       <style jsx global>{`
@@ -558,12 +674,75 @@ export default function Header() {
           }
         }
 
+        /* ===== TABLET & MOBILE ===== */
         @media (max-width: 1024px) {
           .desktop-nav {
             display: none !important;
           }
           .mobile-menu-btn {
             display: flex !important;
+          }
+        }
+
+        /* ===== MOBILE (max 768px) ===== */
+        @media (max-width: 768px) {
+          .header-content {
+            padding: 8px 16px !important;
+            gap: 8px !important;
+          }
+
+          .header-logo {
+            width: 56px !important;
+            height: 56px !important;
+            transform: scale(1.1) !important;
+          }
+
+          .header-right-icons {
+            gap: 0px !important;
+          }
+
+          /* ⚠️ 48dp touch target enforced */
+          .header-right-icons > * {
+            width: 44px !important;
+            height: 44px !important;
+            min-width: 44px !important;
+            min-height: 44px !important;
+          }
+
+          .header-right-icons svg {
+            width: 18px !important;
+            height: 18px !important;
+          }
+        }
+
+        /* ===== SMALL MOBILE (max 480px) ===== */
+        @media (max-width: 480px) {
+          .header-content {
+            padding: 6px 12px !important;
+            gap: 6px !important;
+          }
+
+          .header-logo {
+            width: 48px !important;
+            height: 48px !important;
+            transform: scale(1.05) !important;
+          }
+
+          .header-right-icons {
+            gap: 0px !important;
+          }
+
+          /* ⚠️ Still maintain 44dp minimum for Android */
+          .header-right-icons > * {
+            width: 42px !important;
+            height: 42px !important;
+            min-width: 42px !important;
+            min-height: 42px !important;
+          }
+
+          .header-right-icons svg {
+            width: 17px !important;
+            height: 17px !important;
           }
         }
       `}</style>
@@ -585,23 +764,24 @@ function IconButton({
 }) {
   const content = (
     <>
-      <Icon size={18} />
+      <Icon size={20} />
       {badge && (
         <span
           style={{
             position: "absolute",
-            top: "-4px",
-            right: "-4px",
+            top: "-2px",
+            right: "-2px",
             backgroundColor: "#FF6B8A",
             color: "#FFFFFF",
             fontSize: "10px",
             fontWeight: 600,
             borderRadius: "999px",
-            width: "16px",
-            height: "16px",
+            width: "18px",
+            height: "18px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            boxShadow: "0 2px 4px rgba(255, 107, 138, 0.3)",
           }}
         >
           {badge}
@@ -615,8 +795,8 @@ function IconButton({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    width: "40px",
-    height: "40px",
+    width: "48px",
+    height: "48px",
     borderRadius: "50%",
     color: "#333333",
     textDecoration: "none",
@@ -624,6 +804,7 @@ function IconButton({
     border: "none",
     cursor: "pointer",
     transition: "all 0.25s ease",
+    flexShrink: 0,
   };
 
   const onMouseEnter = (e: any) => {

@@ -69,6 +69,7 @@ export default function Footer() {
       }}
     >
       <div
+        className="footer-container"
         style={{
           maxWidth: "1400px",
           margin: "0 auto",
@@ -80,7 +81,7 @@ export default function Footer() {
           flexDirection: "column",
         }}
       >
-        {/* ===== Main Content Area (Position Relative) ===== */}
+        {/* ===== Main Content Area ===== */}
         <div
           className="footer-main"
           style={{
@@ -104,6 +105,7 @@ export default function Footer() {
             {/* Categories */}
             <div style={{ flex: 1 }}>
               <h3
+                className="footer-section-title"
                 style={{
                   fontFamily: "var(--font-cormorant), serif",
                   fontSize: "18px",
@@ -151,6 +153,7 @@ export default function Footer() {
             {/* Shop By */}
             <div style={{ flex: 1 }}>
               <h3
+                className="footer-section-title"
                 style={{
                   fontFamily: "var(--font-cormorant), serif",
                   fontSize: "18px",
@@ -196,7 +199,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* ===== CENTER: Logo Section (Absolute Center) ===== */}
+          {/* ===== CENTER: Logo Section ===== */}
           <div
             className="footer-center-group"
             style={{
@@ -224,11 +227,13 @@ export default function Footer() {
                   height: "140px",
                 }}
                 priority
+                className="footer-logo"
               />
             </Link>
 
             {/* Subtitle 1 */}
             <p
+              className="footer-subtitle-1"
               style={{
                 fontFamily: "var(--font-cormorant), serif",
                 fontSize: "15px",
@@ -254,6 +259,7 @@ export default function Footer() {
 
             {/* Subtitle 2 */}
             <p
+              className="footer-subtitle-2"
               style={{
                 fontFamily: "var(--font-inter), sans-serif",
                 fontSize: "9px",
@@ -269,6 +275,7 @@ export default function Footer() {
 
             {/* Social Icons */}
             <div
+              className="footer-social-icons"
               style={{
                 display: "flex",
                 gap: "8px",
@@ -284,6 +291,7 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={social.name}
+                    className="footer-social-icon"
                     style={{
                       width: "34px",
                       height: "34px",
@@ -335,6 +343,7 @@ export default function Footer() {
             {/* Get to know Us */}
             <div style={{ flex: 1 }}>
               <h3
+                className="footer-section-title"
                 style={{
                   fontFamily: "var(--font-cormorant), serif",
                   fontSize: "18px",
@@ -382,6 +391,7 @@ export default function Footer() {
             {/* Support */}
             <div style={{ flex: 1 }}>
               <h3
+                className="footer-section-title"
                 style={{
                   fontFamily: "var(--font-cormorant), serif",
                   fontSize: "18px",
@@ -430,6 +440,7 @@ export default function Footer() {
 
         {/* ===== Copyright Bar ===== */}
         <div
+          className="footer-copyright-wrapper"
           style={{
             paddingTop: "20px",
             marginTop: "20px",
@@ -440,6 +451,7 @@ export default function Footer() {
           }}
         >
           <p
+            className="footer-copyright"
             style={{
               fontFamily: "var(--font-inter), sans-serif",
               fontSize: "11px",
@@ -466,6 +478,7 @@ export default function Footer() {
           transform: translateX(4px);
         }
 
+        /* ===== TABLET (max 1024px) ===== */
         @media (max-width: 1024px) {
           .footer-left-group,
           .footer-right-group {
@@ -476,22 +489,181 @@ export default function Footer() {
           }
         }
 
+        /* ===== MOBILE (max 768px) ===== */
         @media (max-width: 768px) {
+          .footer-container {
+            height: auto !important;
+            min-height: auto !important;
+            padding: 32px 20px 24px !important;
+            border-radius: 20px !important;
+          }
+
           .footer-main {
             display: flex !important;
             flex-direction: column !important;
-            gap: 32px !important;
+            gap: 0 !important;
+            position: relative !important;
+            height: auto !important;
           }
-          .footer-left-group,
-          .footer-right-group,
+
+          /* Row 1: Categories + Shop By — 2 Columns */
+          .footer-left-group {
+            position: static !important;
+            transform: none !important;
+            width: 100% !important;
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            gap: 16px !important;
+            order: 1 !important;
+            padding: 0 !important;
+          }
+
+          .footer-left-group > div:first-child {
+            flex: 0 0 55% !important;
+            width: 55% !important;
+          }
+
+          .footer-left-group > div:last-child {
+            flex: 0 0 40% !important;
+            width: 40% !important;
+            text-align: right !important;
+          }
+
+          /* Row 2: Logo Section — Full Width Centered */
+          /* Row 2: Logo Section — Full Width Centered */
           .footer-center-group {
             position: static !important;
             transform: none !important;
             width: 100% !important;
+            order: 2 !important;
+            margin-top: 16px !important;
+            margin-bottom: 16px !important;
+            padding: 16px 0 12px 0 !important;
+            border-top: 1px solid rgba(255, 107, 138, 0.15) !important;
+            border-bottom: 1px solid rgba(255, 107, 138, 0.15) !important;
+            align-items: center !important;
+            text-align: center !important;
           }
-          .footer-left-group,
+
+          .footer-logo {
+            width: 100px !important;
+            height: 100px !important;
+          }
+
+          .footer-subtitle-1 {
+            font-size: 14px !important;
+            line-height: 1.5 !important;
+            max-width: 280px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+          }
+
+          .footer-subtitle-2 {
+            font-size: 8px !important;
+            letter-spacing: 1.5px !important;
+          }
+
+          .footer-social-icons {
+            gap: 10px !important;
+            margin-top: 16px !important;
+          }
+
+          .footer-social-icon {
+            width: 40px !important;
+            height: 40px !important;
+          }
+
+          /* Row 3: Get to know Us + Support — 2 Columns */
           .footer-right-group {
+            position: static !important;
+            transform: none !important;
+            width: 100% !important;
+            display: flex !important;
+            flex-direction: row !important;
             justify-content: space-between !important;
+            gap: 16px !important;
+            order: 3 !important;
+            padding: 0 !important;
+          }
+
+          .footer-right-group > div:first-child {
+            flex: 0 0 55% !important;
+            width: 55% !important;
+          }
+
+          .footer-right-group > div:last-child {
+            flex: 0 0 40% !important;
+            width: 40% !important;
+            text-align: right !important;
+          }
+          /* Section Titles */
+          .footer-section-title {
+            font-size: 16px !important;
+            margin-bottom: "12px" !important;
+          }
+
+          /* Links */
+          .footer-link {
+            font-size: 13px !important;
+            line-height: 1.8 !important;
+          }
+
+          /* Copyright */
+          .footer-copyright-wrapper {
+            margin-top: 24px !important;
+            padding-top: 20px !important;
+          }
+
+          .footer-copyright {
+            font-size: 11px !important;
+            line-height: 1.6 !important;
+          }
+        }
+
+        /* ===== SMALL MOBILE (max 480px) ===== */
+        @media (max-width: 480px) {
+          .footer-container {
+            padding: 20px 16px 16px !important;
+            border-radius: 16px !important;
+          }
+
+          .footer-center-group {
+            margin-top: 12px !important;
+            margin-bottom: 12px !important;
+            padding: 12px 0 10px 0 !important;
+          }
+          .footer-logo {
+            width: 88px !important;
+            height: 88px !important;
+          }
+
+          .footer-subtitle-1 {
+            font-size: 13px !important;
+          }
+
+          .footer-subtitle-2 {
+            font-size: 7px !important;
+            letter-spacing: 1.2px !important;
+          }
+
+          .footer-section-title {
+            font-size: 15px !important;
+            margin-bottom: 10px !important;
+          }
+
+          .footer-link {
+            font-size: 12px !important;
+            line-height: 1.7 !important;
+          }
+
+          .footer-social-icon {
+            width: 36px !important;
+            height: 36px !important;
+          }
+
+          .footer-copyright {
+            font-size: 10px !important;
           }
         }
       `}</style>

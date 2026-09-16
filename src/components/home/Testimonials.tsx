@@ -4,16 +4,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { FiHeart, FiArrowRight } from "react-icons/fi";
 
-// Row 1 — moving right
-const row1Images = [
+// Left Column — 4 images
+const leftColumnImages = [
   "https://placehold.co/300x450/FFE5EC/FF4081?text=Chat+1",
   "https://placehold.co/300x450/FFF8F9/FF6B8A?text=Chat+2",
   "https://placehold.co/300x450/FFE5EC/E91E63?text=Chat+3",
   "https://placehold.co/300x450/FFF8F9/FF4081?text=Chat+4",
 ];
 
-// Row 2 — moving left
-const row2Images = [
+// Right Column — 4 images
+const rightColumnImages = [
   "https://placehold.co/300x450/FFE5EC/FF6B8A?text=Chat+5",
   "https://placehold.co/300x450/FFF8F9/E91E63?text=Chat+6",
   "https://placehold.co/300x450/FFE5EC/FF4081?text=Chat+7",
@@ -23,6 +23,7 @@ const row2Images = [
 export default function Testimonials() {
   return (
     <section
+      className="testimonials-section"
       style={{
         width: "100%",
         padding: "80px 24px",
@@ -30,387 +31,452 @@ export default function Testimonials() {
       }}
     >
       <div
+        className="testimonials-wrapper"
         style={{
           maxWidth: "1400px",
           margin: "0 auto",
           position: "relative",
-          height: "500px",
           borderRadius: "32px",
           overflow: "hidden",
           backgroundColor: "#FFF8F9",
+          padding: "40px",
         }}
       >
         {/* ============================================================
-            SVG DEFINITIONS: Clip paths for parabola shapes
-        ============================================================ */}
-        <svg
-          width="0"
-          height="0"
-          style={{ position: "absolute" }}
-          aria-hidden="true"
-        >
-          <defs>
-            {/* Left panel clip — larger (65% width) with mirror curve on right edge */}
-            <clipPath id="testiLeftClip" clipPathUnits="objectBoundingBox">
-              {/* 
-                Mirror of Hero: curve bulges toward left (concave)
-                - Start top-left (0,0)
-                - Line to 68% at top
-                - Curve down to 68% at bottom (curve bulge to right)
-                - Line to bottom-left (0,1)
-              */}
-              <path
-                d="M 0 0 
-                   L 0.62 0 
-                   C 0.72 0.35, 0.72 0.65, 0.62 1 
-                   L 0 1 
-                   Z"
-              />
-            </clipPath>
-
-            {/* Right panel clip — smaller (35% width) with mirror curve on left edge */}
-            <clipPath id="testiRightClip" clipPathUnits="objectBoundingBox">
-              {/* 
-                Mirror curve: starts from right side
-                - Start top-right (1,0)
-                - Line to 35% at top
-                - Curve down to 35% at bottom (curve bulge to left)
-                - Line to bottom-right (1,1)
-              */}
-              <path
-                d="M 1 0 
-                   L 0.38 0 
-                   C 0.28 0.35, 0.28 0.65, 0.38 1 
-                   L 1 1 
-                   Z"
-              />
-            </clipPath>
-          </defs>
-        </svg>
-
-        {/* ============================================================
-            LEFT PANEL: Chat screenshots with 2-row scrolling animation
-            (65% width, larger, curve bulges right)
+            TOP: Gratefulness Text Card (Full Width)
         ============================================================ */}
         <div
+          className="testi-text-card"
           style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "70%",
-            height: "100%",
-            clipPath: "url(#testiLeftClip)",
-            overflow: "hidden",
-            backgroundColor: "#FFF8F9",
-            zIndex: 2,
+            backgroundColor: "#FFFFFF",
+            borderRadius: "24px",
+            padding: "40px 48px",
+            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "20px",
+            boxShadow: "0 8px 30px rgba(255, 107, 138, 0.08)",
+            border: "1.5px solid rgba(255, 107, 138, 0.15)",
+            position: "relative",
+            zIndex: 5,
+            marginBottom: "0",
           }}
         >
-          {/* Decorative gradient background */}
+          {/* Heart Icon */}
+          <div
+            className="testi-heart-icon"
+            style={{
+              width: "56px",
+              height: "56px",
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #FF6B8A 0%, #FF4081 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#FFFFFF",
+              boxShadow: "0 12px 32px rgba(255, 107, 138, 0.35)",
+            }}
+          >
+            <FiHeart size={24} fill="#FFFFFF" strokeWidth={0} />
+          </div>
+
+          {/* Heading */}
+          <h2
+            className="testi-heading"
+            style={{
+              fontFamily: "var(--font-cormorant), serif",
+              fontSize: "clamp(26px, 3vw, 40px)",
+              fontWeight: 600,
+              color: "#1A1A1A",
+              margin: 0,
+              lineHeight: 1.2,
+              letterSpacing: "0.3px",
+            }}
+          >
+            আপনার ভালোবাসায়{" "}
+            <span
+              style={{
+                color: "#FF6B8A",
+                fontStyle: "italic",
+              }}
+            >
+              অনুপ্রাণিত
+            </span>{" "}
+            আমরা
+          </h2>
+
+          {/* Subtext */}
+          <p
+            className="testi-subtext"
+            style={{
+              fontFamily: "var(--font-inter), sans-serif",
+              fontSize: "14px",
+              lineHeight: 1.7,
+              color: "#555555",
+              margin: 0,
+              maxWidth: "560px",
+            }}
+          >
+            প্রতিটি মেসেজ, প্রতিটি প্রশংসা আমাদের আরও ভালো করার অনুপ্রেরণা দেয়।
+            আপনার বিশ্বাসই আমাদের সবচেয়ে বড় শক্তি।
+          </p>
+
+          {/* CTA Button */}
+          <Link
+            href="/about"
+            className="testi-cta-btn"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "10px",
+              padding: "14px 32px",
+              backgroundColor: "#FF6B8A",
+              color: "#FFFFFF",
+              fontFamily: "var(--font-inter), sans-serif",
+              fontSize: "13px",
+              fontWeight: 600,
+              textDecoration: "none",
+              borderRadius: "999px",
+              boxShadow: "0 10px 28px rgba(255, 107, 138, 0.35)",
+              transition: "all 0.3s ease",
+              letterSpacing: "0.3px",
+              minHeight: "44px",
+              marginTop: "8px",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#FF4081";
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow =
+                "0 15px 40px rgba(255, 107, 138, 0.5)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#FF6B8A";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow =
+                "0 10px 28px rgba(255, 107, 138, 0.35)";
+            }}
+          >
+            আমাদের সম্পর্কে জানতে
+            <FiArrowRight size={15} strokeWidth={2.5} />
+          </Link>
+        </div>
+
+        {/* ============================================================
+            CURVED SEPARATOR — Border Radius (Subtle Curve)
+        ============================================================ */}
+        <div
+          className="testi-curve-separator"
+          style={{
+            position: "relative",
+            width: "100%",
+            height: "60px",
+            marginTop: "-30px",
+            zIndex: 3,
+            pointerEvents: "none",
+            overflow: "hidden",
+          }}
+        >
+          {/* 
+            Curved shape via border-radius — creates a smooth arc
+            that bridges the text card and the image grid below
+          */}
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              background:
-                "radial-gradient(circle at 20% 30%, rgba(255, 107, 138, 0.12), transparent 60%), radial-gradient(circle at 80% 70%, rgba(255, 64, 129, 0.08), transparent 60%)",
-              pointerEvents: "none",
+              top: "50%",
+              left: "-10%",
+              right: "-10%",
+              height: "200%",
+              backgroundColor: "#FFF8F9",
+              borderRadius: "50% 50% 0 0 / 100% 100% 0 0",
+              boxShadow: "0 -20px 40px rgba(255, 107, 138, 0.06)",
             }}
           />
-
-          {/* ===== Scrolling Rows Container ===== */}
+        </div>
+        {/* ============================================================
+            BOTTOM: 2-Column Chat Images Grid
+        ============================================================ */}
+        <div
+          className="testi-images-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "24px",
+            position: "relative",
+            height: "480px",
+            overflow: "hidden",
+            marginTop: "40px",
+          }}
+        >
+          {/* ===== LEFT COLUMN (Bottom → Top) ===== */}
           <div
+            className="testi-column-left"
             style={{
               position: "relative",
-              width: "100%",
+              overflow: "hidden",
               height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              gap: "20px",
-              padding: "20px 0",
             }}
           >
-            {/* ===== Row 1 — Moving Right (Left → Right) ===== */}
             <div
-              className="scroll-row-right"
+              className="vertical-scroll-up"
               style={{
                 display: "flex",
+                flexDirection: "column",
                 gap: "16px",
-                width: "fit-content",
-                animation: "scrollRight 60s linear infinite",
+                animation: "verticalScrollUp 30s linear infinite",
               }}
             >
-              {/* Duplicate set for seamless loop */}
-              {[...row1Images, ...row1Images, ...row1Images].map(
-                (img, index) => (
-                  <div
-                    key={`r1-${index}`}
-                    style={{
-                      flexShrink: 0,
-                      width: "180px",
-                      height: "260px",
-                      borderRadius: "16px",
-                      overflow: "hidden",
-                      backgroundColor: "#FFFFFF",
-                      boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
-                      position: "relative",
-                    }}
-                  >
-                    <Image
-                      src={img}
-                      alt={`Chat ${index + 1}`}
-                      fill
-                      style={{ objectFit: "cover" }}
-                      sizes="180px"
-                      unoptimized
-                    />
-                  </div>
-                )
-              )}
-            </div>
-
-            {/* ===== Row 2 — Moving Left (Right → Left) ===== */}
-            <div
-              className="scroll-row-left"
-              style={{
-                display: "flex",
-                gap: "16px",
-                width: "fit-content",
-                animation: "scrollLeft 60s linear infinite",
-                marginLeft: "-180px",
-              }}
-            >
-              {/* Duplicate set for seamless loop */}
-              {[...row2Images, ...row2Images, ...row2Images].map(
-                (img, index) => (
-                  <div
-                    key={`r2-${index}`}
-                    style={{
-                      flexShrink: 0,
-                      width: "180px",
-                      height: "260px",
-                      borderRadius: "16px",
-                      overflow: "hidden",
-                      backgroundColor: "#FFFFFF",
-                      boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
-                      position: "relative",
-                    }}
-                  >
-                    <Image
-                      src={img}
-                      alt={`Chat ${index + 5}`}
-                      fill
-                      style={{ objectFit: "cover" }}
-                      sizes="180px"
-                      unoptimized
-                    />
-                  </div>
-                )
-              )}
+              {[
+                ...leftColumnImages,
+                ...leftColumnImages,
+                ...leftColumnImages,
+              ].map((img, index) => (
+                <div
+                  key={`left-${index}`}
+                  className="testi-chat-item"
+                  style={{
+                    flexShrink: 0,
+                    width: "100%",
+                    aspectRatio: "2 / 3",
+                    borderRadius: "16px",
+                    overflow: "hidden",
+                    backgroundColor: "#FFFFFF",
+                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+                    position: "relative",
+                  }}
+                >
+                  <Image
+                    src={img}
+                    alt={`Chat ${index + 1}`}
+                    fill
+                    style={{ objectFit: "cover" }}
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    unoptimized
+                  />
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Subtle gradient overlay at edges for smooth fade */}
+          {/* ===== RIGHT COLUMN (Top → Bottom) ===== */}
+          <div
+            className="testi-column-right"
+            style={{
+              position: "relative",
+              overflow: "hidden",
+              height: "100%",
+            }}
+          >
+            <div
+              className="vertical-scroll-down"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+                animation: "verticalScrollDown 30s linear infinite",
+              }}
+            >
+              {[
+                ...rightColumnImages,
+                ...rightColumnImages,
+                ...rightColumnImages,
+              ].map((img, index) => (
+                <div
+                  key={`right-${index}`}
+                  className="testi-chat-item"
+                  style={{
+                    flexShrink: 0,
+                    width: "100%",
+                    aspectRatio: "2 / 3",
+                    borderRadius: "16px",
+                    overflow: "hidden",
+                    backgroundColor: "#FFFFFF",
+                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+                    position: "relative",
+                  }}
+                >
+                  <Image
+                    src={img}
+                    alt={`Chat ${index + 5}`}
+                    fill
+                    style={{ objectFit: "cover" }}
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    unoptimized
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Edge fade — top */}
           <div
             style={{
               position: "absolute",
               top: 0,
               left: 0,
-              width: "80px",
-              height: "100%",
-              background:
-                "linear-gradient(90deg, #FFF8F9 0%, transparent 100%)",
-              pointerEvents: "none",
-              zIndex: 3,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
               right: 0,
-              width: "80px",
-              height: "100%",
+              height: "60px",
               background:
-                "linear-gradient(270deg, #FFF8F9 0%, transparent 100%)",
+                "linear-gradient(180deg, #FFF8F9 0%, transparent 100%)",
               pointerEvents: "none",
-              zIndex: 3,
+              zIndex: 5,
             }}
           />
-        </div>
 
-        {/* ============================================================
-            RIGHT PANEL: Gratefulness Statement
-            (35% width, smaller, curve bulges left)
-        ============================================================ */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            width: "60%",
-            height: "100%",
-            clipPath: "url(#testiRightClip)",
-            overflow: "hidden",
-            zIndex: 3,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            padding: "48px 48px 48px 60px",
-            backgroundColor: "#FFFFFF",
-          }}
-        >
-          {/* Decorative background */}
+          {/* Edge fade — bottom */}
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              background:
-                "radial-gradient(circle at 80% 20%, rgba(255, 107, 138, 0.08), transparent 60%)",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: "60px",
+              background: "linear-gradient(0deg, #FFF8F9 0%, transparent 100%)",
               pointerEvents: "none",
+              zIndex: 5,
             }}
           />
-
-          {/* Content Wrapper */}
-          <div
-            style={{
-              position: "relative",
-              zIndex: 2,
-              display: "flex",
-              flexDirection: "column",
-              gap: "20px",
-              maxWidth: "380px",
-              marginLeft: "auto",
-            }}
-          >
-            {/* Heart Icon */}
-            <div
-              style={{
-                width: "56px",
-                height: "56px",
-                borderRadius: "50%",
-                background:
-                  "linear-gradient(135deg, #FF6B8A 0%, #FF4081 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#FFFFFF",
-                boxShadow: "0 12px 32px rgba(255, 107, 138, 0.35)",
-              }}
-            >
-              <FiHeart size={24} fill="#FFFFFF" strokeWidth={0} />
-            </div>
-
-            {/* Heading */}
-            <h2
-              style={{
-                fontFamily: "var(--font-cormorant), serif",
-                fontSize: "clamp(24px, 2.2vw, 34px)",
-                fontWeight: 600,
-                color: "#1A1A1A",
-                margin: 0,
-                lineHeight: 1.2,
-                letterSpacing: "0.3px",
-              }}
-            >
-              আপনার ভালোবাসায়
-              <br />
-              <span
-                style={{
-                  color: "#FF6B8A",
-                  fontStyle: "italic",
-                }}
-              >
-                অনুপ্রাণিত
-              </span>{" "}
-              আমরা
-            </h2>
-
-            {/* Subtext */}
-            <p
-              style={{
-                fontFamily: "var(--font-inter), sans-serif",
-                fontSize: "14px",
-                lineHeight: 1.7,
-                color: "#555555",
-                margin: 0,
-              }}
-            >
-              প্রতিটি মেসেজ, প্রতিটি প্রশংসা আমাদের আরও ভালো করার
-              অনুপ্রেরণা দেয়। আপনার বিশ্বাসই আমাদের সবচেয়ে বড় শক্তি।
-            </p>
-
-            {/* CTA Button */}
-            <Link
-              href="/about"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "10px",
-                padding: "14px 28px",
-                backgroundColor: "#FF6B8A",
-                color: "#FFFFFF",
-                fontFamily: "var(--font-inter), sans-serif",
-                fontSize: "13px",
-                fontWeight: 600,
-                textDecoration: "none",
-                borderRadius: "999px",
-                alignSelf: "flex-start",
-                marginTop: "8px",
-                boxShadow: "0 10px 28px rgba(255, 107, 138, 0.35)",
-                transition: "all 0.3s ease",
-                letterSpacing: "0.3px",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#FF4081";
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow =
-                  "0 15px 40px rgba(255, 107, 138, 0.5)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "#FF6B8A";
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 10px 28px rgba(255, 107, 138, 0.35)";
-              }}
-            >
-              আমাদের সম্পর্কে জানতে
-              <FiArrowRight size={15} strokeWidth={2.5} />
-            </Link>
-          </div>
         </div>
       </div>
 
-      {/* ===== Scrolling Animation Keyframes ===== */}
+      {/* ===== CSS ===== */}
       <style jsx>{`
-        @keyframes scrollRight {
+        @keyframes verticalScrollUp {
           0% {
-            transform: translateX(0);
+            transform: translateY(0);
           }
           100% {
-            transform: translateX(-33.33%);
+            transform: translateY(-33.33%);
           }
         }
 
-        @keyframes scrollLeft {
+        @keyframes verticalScrollDown {
           0% {
-            transform: translateX(-33.33%);
+            transform: translateY(-33.33%);
           }
           100% {
-            transform: translateX(0);
+            transform: translateY(0);
           }
         }
 
+        /* ===== TABLET (max 1024px) ===== */
         @media (max-width: 1024px) {
-          .scroll-row-right,
-          .scroll-row-left {
-            animation-duration: 45s !important;
+          .testimonials-section {
+            padding: 60px 20px !important;
+          }
+
+          .testimonials-wrapper {
+            padding: 32px !important;
+            border-radius: 24px !important;
+          }
+
+          .testi-text-card {
+            padding: 32px 32px !important;
+          }
+
+          .testi-images-grid {
+            height: 400px !important;
+            gap: 20px !important;
+          }
+
+          .vertical-scroll-up,
+          .vertical-scroll-down {
+            animation-duration: 25s !important;
           }
         }
 
-        @media (max-width: 640px) {
-          .scroll-row-right,
-          .scroll-row-left {
-            animation-duration: 35s !important;
+        /* ===== MOBILE (max 768px) ===== */
+        @media (max-width: 768px) {
+          .testimonials-section {
+            padding: 48px 16px !important;
+          }
+
+          .testimonials-wrapper {
+            padding: 24px 16px !important;
+            border-radius: 24px !important;
+          }
+
+          .testi-text-card {
+            padding: 28px 20px !important;
+            border-radius: 20px !important;
+            gap: 16px !important;
+          }
+
+          .testi-heart-icon {
+            width: 48px !important;
+            height: 48px !important;
+          }
+
+          .testi-heading {
+            font-size: 24px !important;
+          }
+
+          .testi-subtext {
+            font-size: 13px !important;
+          }
+
+          .testi-cta-btn {
+            padding: 14px 28px !important;
+            font-size: 13px !important;
+            min-height: 48px !important;
+          }
+
+          .testi-curve-divider {
+            height: 40px !important;
+            margin-top: -20px !important;
+            margin-bottom: -20px !important;
+          }
+
+          .testi-images-grid {
+            height: 420px !important;
+            gap: 12px !important;
+            margin-top: 24px !important;
+          }
+
+          .testi-chat-item {
+            border-radius: 12px !important;
+          }
+
+          .vertical-scroll-up,
+          .vertical-scroll-down {
+            animation-duration: 20s !important;
+            gap: 12px !important;
+          }
+
+          .vertical-scroll-up > div,
+          .vertical-scroll-down > div {
+            gap: 12px !important;
+          }
+        }
+
+        /* ===== SMALL MOBILE (max 480px) ===== */
+        @media (max-width: 480px) {
+          .testimonials-section {
+            padding: 40px 12px !important;
+          }
+
+          .testimonials-wrapper {
+            padding: 20px 12px !important;
+            border-radius: 20px !important;
+          }
+
+          .testi-text-card {
+            padding: 24px 16px !important;
+          }
+
+          .testi-heading {
+            font-size: 22px !important;
+          }
+
+          .testi-images-grid {
+            height: 380px !important;
+            gap: 10px !important;
+          }
+
+          .vertical-scroll-up,
+          .vertical-scroll-down {
+            animation-duration: 18s !important;
           }
         }
       `}</style>

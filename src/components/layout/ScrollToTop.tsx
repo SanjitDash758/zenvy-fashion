@@ -123,16 +123,33 @@ export default function ScrollToTop() {
 
       {/* Responsive CSS */}
       <style jsx>{`
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
           .scroll-to-top {
-            bottom: 20px !important;
-            right: 20px !important;
+            bottom: 80px !important;
+            right: 16px !important;
             width: 48px !important;
             height: 48px !important;
+            min-width: 48px !important;
+            min-height: 48px !important;
           }
           .progress-ring {
             width: 48px !important;
             height: 48px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .scroll-to-top {
+            bottom: 80px !important;
+            right: 12px !important;
+            width: 44px !important;
+            height: 44px !important;
+            min-width: 44px !important;
+            min-height: 44px !important;
+          }
+          .progress-ring {
+            width: 44px !important;
+            height: 44px !important;
           }
         }
       `}</style>

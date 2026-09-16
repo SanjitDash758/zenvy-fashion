@@ -16,7 +16,7 @@ import {
 } from "react-icons/fi";
 import { useCartStore } from "@/store/cartStore";
 
-const WHATSAPP_NUMBER = "8801974164273"; // Bangladesh format
+const WHATSAPP_NUMBER = "8801335620792"; // Bangladesh format
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -56,7 +56,7 @@ export default function CheckoutPage() {
     if (!formData.phone.trim()) {
       newErrors.phone = "ফোন নম্বর প্রয়োজন";
     } else if (!/^01[3-9]\d{8}$/.test(formData.phone.trim())) {
-      newErrors.phone = "সঠিক ফোন নম্বর দিন (যেমন: 01712345678)";
+      newErrors.phone = "সঠিক ফোন নম্বর দিন (যেমন: 01714747832)";
     }
     if (!formData.address.trim()) {
       newErrors.address = "ঠিকানা প্রয়োজন";
