@@ -5,11 +5,14 @@ const CONSUMER_KEY = process.env.WC_CONSUMER_KEY;
 const CONSUMER_SECRET = process.env.WC_CONSUMER_SECRET;
 
 // WooCommerce API instance
+const credentials = Buffer.from(`${CONSUMER_KEY}:${CONSUMER_SECRET}`).toString(
+  "base64",
+);
+
 export const wooApi = axios.create({
   baseURL: `${WP_URL}/wp-json/wc/v3`,
-  auth: {
-    username: CONSUMER_KEY!,
-    password: CONSUMER_SECRET!,
+  headers: {
+    Authorization: `Basic ${credentials}`,
   },
 });
 
@@ -105,6 +108,7 @@ export const getFeaturedProducts = async (
     return [];
   }
 };
+
 // ===== Fetch categories =====
 export const getCategories = async () => {
   try {
@@ -181,5 +185,24 @@ export const getProductByDecodedSlug = async (
   } catch (error) {
     console.error("Error fetching product by slug:", error);
     return null;
+  }
+};
+
+// ===== Fetch Puja Collection products (NEW) =====
+export const getPujaCollectionProducts = async (
+  limit: number = 8,
+): Promise<WooProduct[]> => {
+  try {
+    const response = await wooApi.get("/products", {
+      params: {
+        category: 44,
+        per_page: limit,
+        status: "publish",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching Puja Collection products:", error);
+    return [];
   }
 };

@@ -6,17 +6,17 @@ import { FiHeart, FiArrowRight } from "react-icons/fi";
 
 // ===== Chat Images =====
 const row1Images = [
-  "https://placehold.co/300x450/FFE5EC/FF4081?text=Chat+1",
-  "https://placehold.co/300x450/FFF8F9/FF6B8A?text=Chat+2",
-  "https://placehold.co/300x450/FFE5EC/E91E63?text=Chat+3",
-  "https://placehold.co/300x450/FFF8F9/FF4081?text=Chat+4",
+  "images/feedback1.png",
+  "images/feedback2.png",
+  "images/feedback3.png",
+  "images/feedback4.png",
 ];
 
 const row2Images = [
-  "https://placehold.co/300x450/FFE5EC/FF6B8A?text=Chat+5",
-  "https://placehold.co/300x450/FFF8F9/E91E63?text=Chat+6",
-  "https://placehold.co/300x450/FFE5EC/FF4081?text=Chat+7",
-  "https://placehold.co/300x450/FFF8F9/FF6B8A?text=Chat+8",
+  "images/feedback5.png",
+  "images/feedback6.png",
+  "images/feedback7.png",
+  "images/feedback8.png",
 ];
 
 export default function Testimonials() {
