@@ -27,7 +27,7 @@ const getToKnowUs = [
 ];
 
 const supportLinks = [
-  { name: "অর্ডার ট্র্যাক", href: "/order-tracking" },
+  { name: "অর্ডার ট্র্যাক", href: "/track-order" },
   { name: "যোগাযোগ", href: "/contact" },
   { name: "পণ্য খুঁজুন", href: "/#product-filter" },
 ];
@@ -35,27 +35,15 @@ const supportLinks = [
 const socialLinks = [
   {
     name: "Facebook",
-    href: "https://facebook.com",
+    href: "https://www.facebook.com/share/1FCevZBWbb/",
     icon: FiFacebook,
     color: "#1877F2",
   },
   {
-    name: "Instagram",
-    href: "https://instagram.com",
-    icon: FiInstagram,
-    color: "#E4405F",
-  },
-  {
     name: "TikTok",
-    href: "https://tiktok.com",
+    href: "https://tiktok.com/@zenvyfashionbd",
     icon: FaTiktok,
     color: "#000000",
-  },
-  {
-    name: "YouTube",
-    href: "https://youtube.com",
-    icon: FiYoutube,
-    color: "#FF0000",
   },
 ];
 

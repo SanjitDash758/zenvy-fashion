@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -29,7 +29,7 @@ interface Variation {
 
 interface QuickAddModalProps {
   product: WooProduct | null;
-  variations: Variation[];
+  variations?: Variation[];
   isOpen: boolean;
   onClose: () => void;
   mode?: "cart" | "buy";
@@ -37,12 +37,11 @@ interface QuickAddModalProps {
 
 export default function QuickAddModal({
   product,
-  variations,
+  variations = [],
   isOpen,
   onClose,
   mode = "cart",
 }: QuickAddModalProps) {
-  // ===== ALL HOOKS AT THE TOP (Rules of Hooks) =====
   const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
   const [selectedVariation, setSelectedVariation] = useState<Variation | null>(
@@ -52,13 +51,26 @@ export default function QuickAddModal({
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("কার্টে যোগ হয়েছে!");
 
-  // Reset state when modal opens
+  const defaultSetRef = useRef(false);
+
+  // Reset everything when modal closes
   useEffect(() => {
-    if (isOpen && variations.length > 0) {
-      setSelectedVariation(variations[0]);
+    if (!isOpen) {
+      setSelectedVariation(null);
       setQuantity(1);
+      setShowToast(false);
+      defaultSetRef.current = false;
     }
-  }, [isOpen, variations]);
+  }, [isOpen]);
+
+  // Set default variation ONLY ONCE per open session
+  useEffect(() => {
+    if (isOpen && !defaultSetRef.current && variations.length > 0) {
+      setSelectedVariation(variations[0]);
+      defaultSetRef.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, variations.length]);
 
   // Prevent body scroll when open
   useEffect(() => {
@@ -72,10 +84,8 @@ export default function QuickAddModal({
     };
   }, [isOpen]);
 
-  // ===== AFTER ALL HOOKS, NOW WE CAN HAVE CONDITIONAL RETURN =====
   if (!isOpen || !product) return null;
 
-  // ===== NON-HOOK LOGIC BELOW =====
   const currentPrice = selectedVariation
     ? parseFloat(selectedVariation.price) || 0
     : parseFloat(product.price) || 0;
@@ -102,7 +112,6 @@ export default function QuickAddModal({
     }
   };
 
-  // Helper: add item to cart
   const addToCartInternal = () => {
     if (!selectedVariation) return false;
     if (currentStockStatus !== "instock") return false;
@@ -129,7 +138,6 @@ export default function QuickAddModal({
     return true;
   };
 
-  // 🛒 Add to Cart only
   const handleAddToCart = () => {
     if (!addToCartInternal()) return;
 
@@ -142,7 +150,6 @@ export default function QuickAddModal({
     }, 1500);
   };
 
-  // ⚡ Buy Now — Cart-এ যোগ করে Checkout-এ যাবে
   const handleBuyNow = () => {
     if (!addToCartInternal()) return;
 
@@ -239,7 +246,6 @@ export default function QuickAddModal({
 
         {/* Content */}
         <div style={{ padding: "24px" }}>
-          {/* Category */}
           {product.categories[0] && (
             <span
               style={{
@@ -257,7 +263,6 @@ export default function QuickAddModal({
             </span>
           )}
 
-          {/* Product Name */}
           <h3
             style={{
               fontFamily: "var(--font-cormorant), serif",
@@ -272,7 +277,6 @@ export default function QuickAddModal({
             {product.name}
           </h3>
 
-          {/* Price */}
           <div
             style={{
               display: "flex",
@@ -308,7 +312,6 @@ export default function QuickAddModal({
             )}
           </div>
 
-          {/* Age Variation Selector */}
           {ageOptions.length > 0 && (
             <div style={{ marginBottom: "20px" }}>
               <label
@@ -360,7 +363,6 @@ export default function QuickAddModal({
             </div>
           )}
 
-          {/* Quantity */}
           <div style={{ marginBottom: "20px" }}>
             <label
               style={{
@@ -432,7 +434,6 @@ export default function QuickAddModal({
             </div>
           </div>
 
-          {/* Action Buttons — 2 buttons side by side */}
           <div
             style={{
               display: "grid",
@@ -440,7 +441,6 @@ export default function QuickAddModal({
               gap: "10px",
             }}
           >
-            {/* Add to Cart Button */}
             <button
               onClick={handleAddToCart}
               disabled={currentStockStatus !== "instock"}
@@ -483,7 +483,6 @@ export default function QuickAddModal({
               কার্টে যোগ
             </button>
 
-            {/* Buy Now Button */}
             <button
               onClick={handleBuyNow}
               disabled={currentStockStatus !== "instock"}
@@ -529,7 +528,6 @@ export default function QuickAddModal({
           </div>
         </div>
 
-        {/* Success Toast */}
         {showToast && (
           <div
             style={{

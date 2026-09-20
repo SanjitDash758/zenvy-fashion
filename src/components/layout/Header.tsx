@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   FiSearch,
+  FiPackage,
   FiShoppingBag,
   FiUser,
   FiMenu,
@@ -40,6 +41,7 @@ const navLinks = [
       { name: "কাঞ্জিভরম", href: "/?category=kanchibaram#product-filter" },
     ],
   },
+  { name: "ট্র্যাক অর্ডার", href: "/track-order", icon: FiPackage },
   { name: "About", href: "/about", icon: FiInfo },
 ];
 

@@ -33,3 +33,12 @@ export interface ProductAttribute {
   name: string;
   options: string[];
 }
+export interface AdminUser {
+  id: string;
+  username: string;
+  display_name: string;
+  role: "admin" | "manager" | "viewer";
+  is_active: boolean;
+  last_login: string | null;
+  created_at: string;
+}

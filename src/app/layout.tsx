@@ -1,11 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import StickySocial from "@/components/layout/StickySocial";
-import ScrollToTop from "@/components/layout/ScrollToTop";
-import { getProducts } from "@/lib/api";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -26,14 +21,11 @@ export const metadata: Metadata = {
   description: "Premium baby and kids saree collection for special occasions",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Fetch products for search functionality
-  const products = await getProducts();
-
   return (
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <body
@@ -47,11 +39,7 @@ export default async function RootLayout({
         }}
         suppressHydrationWarning
       >
-        <Header products={products} />
-        <StickySocial />
-        <main>{children}</main>
-        <Footer />
-        <ScrollToTop />
+        {children}
       </body>
     </html>
   );

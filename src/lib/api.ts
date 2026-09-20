@@ -4,10 +4,18 @@ const WP_URL = process.env.NEXT_PUBLIC_WP_URL;
 const CONSUMER_KEY = process.env.WC_CONSUMER_KEY;
 const CONSUMER_SECRET = process.env.WC_CONSUMER_SECRET;
 
-// WooCommerce API instance
-const credentials = Buffer.from(`${CONSUMER_KEY}:${CONSUMER_SECRET}`).toString(
-  "base64",
-);
+// Universal Base64 encoder (works in both server & client)
+const encodeCredentials = (key: string, secret: string): string => {
+  const raw = `${key}:${secret}`;
+  if (typeof window === "undefined") {
+    // Server-side: use Buffer
+    return Buffer.from(raw).toString("base64");
+  }
+  // Client-side: use btoa
+  return btoa(raw);
+};
+
+const credentials = encodeCredentials(CONSUMER_KEY!, CONSUMER_SECRET!);
 
 export const wooApi = axios.create({
   baseURL: `${WP_URL}/wp-json/wc/v3`,
