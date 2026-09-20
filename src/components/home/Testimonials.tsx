@@ -6,17 +6,17 @@ import { FiHeart, FiArrowRight } from "react-icons/fi";
 
 // ===== Chat Images =====
 const row1Images = [
-  "/images/feedback1.png",
-  "/images/feedback2.png",
-  "/images/feedback3.png",
-  "/images/feedback4.png",
+  "/images/feedback1.PNG",
+  "/images/feedback2.PNG",
+  "/images/feedback3.PNG",
+  "/images/feedback4.PNG",
 ];
 
 const row2Images = [
-  "/images/feedback5.png",
-  "/images/feedback6.png",
-  "/images/feedback7.png",
-  "/images/feedback8.png",
+  "/images/feedback5.PNG",
+  "/images/feedback6.PNG",
+  "/images/feedback7.PNG",
+  "/images/feedback8.PNG",
 ];
 
 export default function Testimonials() {
