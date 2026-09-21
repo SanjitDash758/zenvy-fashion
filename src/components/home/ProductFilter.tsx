@@ -32,11 +32,19 @@ const categories = [
 ];
 
 const ages = [
-  { name: "১-৩ বছর", slug: "1-3" },
-  { name: "৩-৫ বছর", slug: "3-5" },
-  { name: "৫-১০ বছর", slug: "5-10" },
-  { name: "১০-১২ বছর", slug: "10-12" },
-  { name: "১২-১৫ বছর", slug: "12-15" },
+  { name: "১-২ বছর", slug: "1-2" },
+  { name: "২-৩ বছর", slug: "2-3" },
+  { name: "৩-৪ বছর", slug: "3-4" },
+  { name: "৪-৫ বছর", slug: "4-5" },
+  { name: "৫-৬ বছর", slug: "5-6" },
+  { name: "৬-৭ বছর", slug: "6-7" },
+  { name: "৭-৮ বছর", slug: "7-8" },
+  { name: "৮-৯ বছর", slug: "8-9" },
+  { name: "৯-১০ বছর", slug: "9-10" },
+  { name: "১০-১১ বছর", slug: "10-11" },
+  { name: "১১-১২ বছর", slug: "11-12" },
+  { name: "১২-১৩ বছর", slug: "12-13" },
+  { name: "১৩-১৫ বছর", slug: "13-15" },
 ];
 
 const occasions = [
