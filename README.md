@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Zenvy Fashion — Baby Saree E-Commerce
 
-## Getting Started
+An end-to-end online store for a Bangladeshi fashion brand. Customers browse products, add to cart, check out, and track orders. The store owner manages inventory and orders from a custom admin dashboard, and gets a Telegram alert the moment a new order is placed.
 
-First, run the development server:
+**Live:** [zenvyfashion.com](https://zenvyfashion.com)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Stack
+
+| Layer         | Choice                                         |
+| ------------- | ---------------------------------------------- |
+| Frontend      | Next.js 16 · React 19 · TypeScript · Tailwind  |
+| Commerce      | WordPress · WooCommerce · WooCommerce REST API |
+| Database      | Supabase (PostgreSQL) · MySQL                  |
+| Auth          | bcryptjs · HMAC-SHA256 · Row-Level Security    |
+| Notifications | Telegram Bot API · Webhooks                    |
+| Deployment    | Vercel · Hostnin · GitHub · Cloudflare         |
+| Tools         | Docker · Git · Node.js · ESLint                |
+
+---
+
+## Architecture
+
+```
+Customer
+  │
+  ▼
+Next.js storefront ──► WooCommerce REST API ──► MySQL
+        │                       │
+        │                       ▼
+        │              Telegram Bot API ──► Owner's phone
+        ▼
+  Supabase (PostgreSQL)
+  (product views, order metadata, RLS-protected reads)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Why two databases?** WooCommerce owns the transactional truth — products, orders, payments. Supabase carries the parts WooCommerce handles awkwardly: fast reads, RLS-scoped access for the admin dashboard, and a clean API for the Next.js frontend.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Why a Telegram bot?** The owner needed immediate order notifications. Email was too slow, SMS cost money per message, and building a push app was overkill. Telegram is free, instant, and the owner already used it.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Running locally
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Opens at `http://localhost:3000`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Environment variables
 
-## Deploy on Vercel
+Create `.env.local` at the project root:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+WOOCOMMERCE_URL=https://zenvyfashion.com
+WOOCOMMERCE_KEY=your_consumer_key
+WOOCOMMERCE_SECRET=your_consumer_secret
+SUPABASE_URL=https://xxxx.supabase.co
+SUPABASE_ANON_KEY=your_anon_key
+TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_CHAT_ID=owner_chat_id
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+None of these are committed. `.env*.local` is in `.gitignore`.
+
+---
+
+## Order flow
+
+1. Customer adds items to cart — state persists in `localStorage`.
+2. Checkout POSTs to WooCommerce's `/orders` endpoint.
+3. On success, a webhook fires to the Next.js API route.
+4. That route calls the Telegram Bot API — the owner receives a formatted message with order ID, customer name, items, and total.
+5. Order appears in the admin dashboard, backed by Supabase.
+
+---
+
+## Security
+
+- Admin routes are gated by server-side session checks.
+- Passwords are hashed with **bcryptjs**.
+- API requests to internal services are signed with **HMAC-SHA256**.
+- Supabase reads use **Row-Level Security** — the admin sees everything, an anonymous visitor sees only published products.
+
+---
+
+## Deployment
+
+- **Storefront:** Vercel, auto-deployed on push to `main`.
+- **WooCommerce:** Hostnin shared hosting, behind Cloudflare.
+- **DNS / Proxy:** Cloudflare.
+
+---
+
+## Notes
+
+- Payment integration uses WooCommerce's built-in gateway. The store currently supports cash-on-delivery and bKash.
+- Image assets are served through Cloudflare's CDN.
+- The admin dashboard is intentionally minimal — one screen for orders, one for products, one for customers.
