@@ -17,6 +17,7 @@ import {
 } from "react-icons/fi";
 import { WooProduct } from "@/lib/api";
 import { useCartStore } from "@/store/cartStore";
+import SizeGuideModal from "./SizeGuideModal";
 
 interface Variation {
   id: number;
@@ -47,6 +48,7 @@ export default function ProductDetailClient({
   );
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
   const [showToast, setShowToast] = useState(false);
 
@@ -95,6 +97,7 @@ export default function ProductDetailClient({
   const selectedAgeValue = selectedVariation?.attributes.find(
     (attr) => attr.name === "Age",
   )?.option;
+
   const handleAddToCart = () => {
     if (!selectedVariation) return;
     if (currentStockStatus !== "instock") return;
@@ -456,11 +459,11 @@ export default function ProductDetailClient({
               </div>
             )}
 
-            {/* Quantity + Add to Cart */}
+            {/* Quantity + Add to Cart + Size Guide + Wishlist */}
             <div
               style={{
                 display: "flex",
-                gap: "12px",
+                gap: "10px",
                 marginBottom: "28px",
                 flexWrap: "wrap",
               }}
@@ -522,23 +525,24 @@ export default function ProductDetailClient({
                 </button>
               </div>
 
+              {/* Add to Cart — Smaller */}
               <button
                 onClick={handleAddToCart}
                 disabled={currentStockStatus !== "instock"}
                 style={{
-                  flex: 1,
-                  minWidth: "200px",
+                  flex: "1 1 auto",
+                  minWidth: "130px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: "10px",
+                  gap: "6px",
                   height: "52px",
-                  padding: "0 32px",
+                  padding: "0 18px",
                   backgroundColor:
                     currentStockStatus === "instock" ? "#FF6B8A" : "#CCCCCC",
                   color: "#FFFFFF",
                   fontFamily: "var(--font-inter), sans-serif",
-                  fontSize: "14px",
+                  fontSize: "13px",
                   fontWeight: 600,
                   border: "none",
                   borderRadius: "12px",
@@ -547,12 +551,12 @@ export default function ProductDetailClient({
                       ? "pointer"
                       : "not-allowed",
                   transition: "all 0.3s ease",
-                  letterSpacing: "0.5px",
-                  textTransform: "uppercase",
+                  letterSpacing: "0.3px",
                   boxShadow:
                     currentStockStatus === "instock"
                       ? "0 10px 30px rgba(255, 107, 138, 0.35)"
                       : "none",
+                  whiteSpace: "nowrap",
                 }}
                 onMouseEnter={(e) => {
                   if (currentStockStatus === "instock") {
@@ -567,10 +571,41 @@ export default function ProductDetailClient({
                   }
                 }}
               >
-                <FiShoppingBag size={18} strokeWidth={2.2} />
-                {currentStockStatus === "instock"
-                  ? "কার্টে যোগ করুন"
-                  : "স্টক নেই"}
+                <FiShoppingBag size={16} strokeWidth={2.2} />
+                কার্টে যোগ
+              </button>
+
+              {/* Size Guide Button */}
+              <button
+                onClick={() => setSizeGuideOpen(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  height: "52px",
+                  padding: "0 18px",
+                  backgroundColor: "#FFFFFF",
+                  color: "#FF6B8A",
+                  fontFamily: "var(--font-inter), sans-serif",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  border: "1.5px solid #FF6B8A",
+                  borderRadius: "12px",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                  whiteSpace: "nowrap",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#FFF0F4";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#FFFFFF";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                📏 সাইজ দেখুন
               </button>
 
               {/* Wishlist */}
@@ -589,6 +624,7 @@ export default function ProductDetailClient({
                   justifyContent: "center",
                   color: isWishlisted ? "#FF4081" : "#555555",
                   transition: "all 0.3s ease",
+                  flexShrink: 0,
                 }}
               >
                 <FiHeart
@@ -739,6 +775,12 @@ export default function ProductDetailClient({
           কার্টে যোগ হয়েছে!
         </div>
       )}
+
+      {/* Size Guide Modal */}
+      <SizeGuideModal
+        isOpen={sizeGuideOpen}
+        onClose={() => setSizeGuideOpen(false)}
+      />
 
       <style jsx>{`
         @media (max-width: 1024px) {
