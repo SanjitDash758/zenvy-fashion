@@ -243,7 +243,7 @@ export default function AboutPage() {
               রয়েছে, যারা তাদের ছোট্ট রাজকন্যাদের জন্য আমাদের ওপর ভরসা রাখেন।
             </p>
 
-            <Link
+            {/* <Link
               href="/shop"
               style={{
                 display: "inline-flex",
@@ -277,7 +277,7 @@ export default function AboutPage() {
             >
               আমাদের কালেকশন দেখুন
               <FiArrowRight size={14} strokeWidth={2.5} />
-            </Link>
+            </Link> */}
           </div>
 
           {/* RIGHT: Image — smaller */}
@@ -692,7 +692,7 @@ export default function AboutPage() {
             </p>
 
             <Link
-              href="/shop"
+              href="/#product-filter"
               style={{
                 display: "inline-flex",
                 alignItems: "center",

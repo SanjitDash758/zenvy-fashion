@@ -103,151 +103,98 @@ export default function ProductFilter({ products }: ProductFilterProps) {
     setModalVariations([]);
   };
 
-  // ===== Read filters from URL query =====
-  const isApplyingRef = useRef(false);
-  const hasMountedRef = useRef(false);
+// ===== Read filters from URL query =====
+const isApplyingRef = useRef(false);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+useEffect(() => {
+  if (typeof window === "undefined") return;
 
-    // Skip on first mount — prevent "state update before mount" warning
-    if (!hasMountedRef.current) {
-      hasMountedRef.current = true;
+  // Read all params from URL
+  const categoryParam = searchParams.get("category");
+  const colorParam = searchParams.get("color");
+  const ageParam = searchParams.get("age");
+  const occasionParam = searchParams.get("occasion");
+  const maxPriceParam = searchParams.get("maxPrice");
 
-      // Still apply filters on first mount if URL has params
-      const categoryParam = searchParams.get("category");
-      const ageParam = searchParams.get("age");
-      const occasionParam = searchParams.get("occasion");
-      const maxPriceParam = searchParams.get("maxPrice");
+  const hasAnyParam =
+    categoryParam || colorParam || ageParam || occasionParam || maxPriceParam;
 
-      if (categoryParam) {
-        const exists = categories.find((c) => c.slug === categoryParam);
-        if (exists) {
-          setSelectedCategory(categoryParam);
-          setOpenSection("category");
-        }
-      }
+  // Detect if this is a browser reload
+  const navEntries = performance.getEntriesByType(
+    "navigation",
+  ) as PerformanceNavigationTiming[];
+  const isReload = navEntries.length > 0 && navEntries[0].type === "reload";
 
-      if (ageParam) {
-        const exists = ages.find((a) => a.slug === ageParam);
-        if (exists) {
-          setSelectedAge(ageParam);
-          setOpenSection("age");
-        }
-      }
+  // ===== CASE A: Reload → reset filters + clear URL =====
+  if (isReload) {
+    // Reset all filter states
+    setSelectedCategory("all");
+    setSelectedColor("");
+    setSelectedAge("");
+    setSelectedOccasion("all");
+    setPriceRange(5000);
 
-      if (occasionParam) {
-        const exists = occasions.find((o) => o.slug === occasionParam);
-        if (exists) {
-          setSelectedOccasion(occasionParam);
-          setOpenSection("occasion");
-        }
-      }
+    // Clear URL query params immediately
+    const cleanUrl =
+      window.location.pathname +
+      window.location.hash.replace("#product-filter", "");
+    window.history.replaceState(null, "", cleanUrl);
 
-      if (maxPriceParam) {
-        setPriceRange(Number(maxPriceParam));
-      }
+    // Prevent re-entry
+    isApplyingRef.current = false;
+    return;
+  }
 
-      // Save URL
-      sessionStorage.setItem("lastFilterUrl", window.location.href);
+  // ===== CASE B: No URL params → nothing to do =====
+  if (!hasAnyParam) {
+    // User navigated to home without filters.
+    // Don't scroll, don't apply.
+    return;
+  }
 
-      // Scroll to section
-      const timer = setTimeout(() => {
-        const element = document.getElementById("product-filter");
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 100);
+  // ===== CASE C: Fresh navigation with params → apply + scroll =====
+  if (isApplyingRef.current) return;
+  isApplyingRef.current = true;
 
-      return () => clearTimeout(timer);
+  if (categoryParam) {
+    const exists = categories.find((c) => c.slug === categoryParam);
+    if (exists) {
+      setSelectedCategory(categoryParam);
+      setOpenSection("category");
     }
+  }
 
-    // Subsequent changes — handle reload and navigation
-    if (isApplyingRef.current) return;
-
-    const categoryParam = searchParams.get("category");
-    const colorParam = searchParams.get("color");
-    const ageParam = searchParams.get("age");
-    const occasionParam = searchParams.get("occasion");
-    const maxPriceParam = searchParams.get("maxPrice");
-
-    const hasAnyParam =
-      categoryParam || colorParam || ageParam || occasionParam || maxPriceParam;
-
-    const currentUrl = window.location.href;
-    const lastUrl = sessionStorage.getItem("lastFilterUrl");
-
-    // Detect reload
-    const navEntries = performance.getEntriesByType(
-      "navigation",
-    ) as PerformanceNavigationTiming[];
-    const isReload = navEntries.length > 0 && navEntries[0].type === "reload";
-
-    // Reload → reset
-    if (isReload) {
-      isApplyingRef.current = true;
-      setSelectedCategory("all");
-      setSelectedColor("");
-      setSelectedAge("");
-      setSelectedOccasion("all");
-      setPriceRange(5000);
-      sessionStorage.removeItem("lastFilterUrl");
-      window.history.replaceState(null, "", window.location.pathname);
-      setTimeout(() => {
-        isApplyingRef.current = false;
-      }, 100);
-      return;
+  if (ageParam) {
+    const exists = ages.find((a) => a.slug === ageParam);
+    if (exists) {
+      setSelectedAge(ageParam);
+      setOpenSection("age");
     }
+  }
 
-    // No params
-    if (!hasAnyParam) return;
-
-    // Same URL — skip
-    if (lastUrl === currentUrl) return;
-
-    // Apply new params
-    isApplyingRef.current = true;
-
-    if (categoryParam) {
-      const exists = categories.find((c) => c.slug === categoryParam);
-      if (exists) {
-        setSelectedCategory(categoryParam);
-        setOpenSection("category");
-      }
+  if (occasionParam) {
+    const exists = occasions.find((o) => o.slug === occasionParam);
+    if (exists) {
+      setSelectedOccasion(occasionParam);
+      setOpenSection("occasion");
     }
+  }
 
-    if (ageParam) {
-      const exists = ages.find((a) => a.slug === ageParam);
-      if (exists) {
-        setSelectedAge(ageParam);
-        setOpenSection("age");
-      }
+  if (maxPriceParam) {
+    setPriceRange(Number(maxPriceParam));
+  }
+
+  // Scroll to filter section after a short delay
+  const scrollTimer = setTimeout(() => {
+    const element = document.getElementById("product-filter");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+    isApplyingRef.current = false;
+  }, 200);
 
-    if (occasionParam) {
-      const exists = occasions.find((o) => o.slug === occasionParam);
-      if (exists) {
-        setSelectedOccasion(occasionParam);
-        setOpenSection("occasion");
-      }
-    }
-
-    if (maxPriceParam) {
-      setPriceRange(Number(maxPriceParam));
-    }
-
-    sessionStorage.setItem("lastFilterUrl", currentUrl);
-
-    const scrollTimer = setTimeout(() => {
-      const element = document.getElementById("product-filter");
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-      isApplyingRef.current = false;
-    }, 300);
-
-    return () => clearTimeout(scrollTimer);
-  }, [searchParams]);
+  return () => clearTimeout(scrollTimer);
+}, [searchParams]);
 
   const toggleWishlist = (id: number) => {
     setWishlist((prev) =>

@@ -422,7 +422,7 @@ export default function HeroSection({ featuredProducts }: HeroSectionProps) {
               ঐতিহ্য, সৌন্দর্য আর ভালোবাসায় সাজুক আপনার ছোট্ট রাজকন্যা।
             </p>
 
-            <Link
+            {/* <Link
               href="/shop"
               className="hero-cta"
               style={{
@@ -458,7 +458,7 @@ export default function HeroSection({ featuredProducts }: HeroSectionProps) {
             >
               কালেকশন দেখুন
               <span style={{ fontSize: "15px" }}>→</span>
-            </Link>
+            </Link> */} 
           </div>
         </div>
       </div>
