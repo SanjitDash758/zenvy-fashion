@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -104,8 +104,66 @@ export default function ProductFilter({ products }: ProductFilterProps) {
   };
 
   // ===== Read filters from URL query =====
+  const isApplyingRef = useRef(false);
+  const hasMountedRef = useRef(false);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // Skip on first mount — prevent "state update before mount" warning
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+
+      // Still apply filters on first mount if URL has params
+      const categoryParam = searchParams.get("category");
+      const ageParam = searchParams.get("age");
+      const occasionParam = searchParams.get("occasion");
+      const maxPriceParam = searchParams.get("maxPrice");
+
+      if (categoryParam) {
+        const exists = categories.find((c) => c.slug === categoryParam);
+        if (exists) {
+          setSelectedCategory(categoryParam);
+          setOpenSection("category");
+        }
+      }
+
+      if (ageParam) {
+        const exists = ages.find((a) => a.slug === ageParam);
+        if (exists) {
+          setSelectedAge(ageParam);
+          setOpenSection("age");
+        }
+      }
+
+      if (occasionParam) {
+        const exists = occasions.find((o) => o.slug === occasionParam);
+        if (exists) {
+          setSelectedOccasion(occasionParam);
+          setOpenSection("occasion");
+        }
+      }
+
+      if (maxPriceParam) {
+        setPriceRange(Number(maxPriceParam));
+      }
+
+      // Save URL
+      sessionStorage.setItem("lastFilterUrl", window.location.href);
+
+      // Scroll to section
+      const timer = setTimeout(() => {
+        const element = document.getElementById("product-filter");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+
+    // Subsequent changes — handle reload and navigation
+    if (isApplyingRef.current) return;
 
     const categoryParam = searchParams.get("category");
     const colorParam = searchParams.get("color");
@@ -116,41 +174,40 @@ export default function ProductFilter({ products }: ProductFilterProps) {
     const hasAnyParam =
       categoryParam || colorParam || ageParam || occasionParam || maxPriceParam;
 
-    // Current full URL (with hash)
     const currentUrl = window.location.href;
-
-    // Check last URL from sessionStorage
     const lastUrl = sessionStorage.getItem("lastFilterUrl");
 
-    // Detect a true browser reload using the Navigation API
+    // Detect reload
     const navEntries = performance.getEntriesByType(
       "navigation",
     ) as PerformanceNavigationTiming[];
     const isReload = navEntries.length > 0 && navEntries[0].type === "reload";
 
-    // CASE 1: Reload → reset filters & clear URL
+    // Reload → reset
     if (isReload) {
+      isApplyingRef.current = true;
       setSelectedCategory("all");
       setSelectedColor("");
       setSelectedAge("");
       setSelectedOccasion("all");
       setPriceRange(5000);
-
       sessionStorage.removeItem("lastFilterUrl");
-
-      // Remove query params but keep the path
       window.history.replaceState(null, "", window.location.pathname);
-
+      setTimeout(() => {
+        isApplyingRef.current = false;
+      }, 100);
       return;
     }
 
-    // CASE 2: No params → nothing to do
+    // No params
     if (!hasAnyParam) return;
 
-    // CASE 3: Same URL as before (already applied) → do nothing
+    // Same URL — skip
     if (lastUrl === currentUrl) return;
 
-    // CASE 4: Fresh navigation with params → apply them
+    // Apply new params
+    isApplyingRef.current = true;
+
     if (categoryParam) {
       const exists = categories.find((c) => c.slug === categoryParam);
       if (exists) {
@@ -179,16 +236,15 @@ export default function ProductFilter({ products }: ProductFilterProps) {
       setPriceRange(Number(maxPriceParam));
     }
 
-    // Save current URL so we don't re-apply on the next render
     sessionStorage.setItem("lastFilterUrl", currentUrl);
 
-    // Scroll to filter section
     const scrollTimer = setTimeout(() => {
       const element = document.getElementById("product-filter");
       if (element) {
         element.scrollIntoView({ behavior: "smooth", block: "start" });
       }
-    }, 100);
+      isApplyingRef.current = false;
+    }, 300);
 
     return () => clearTimeout(scrollTimer);
   }, [searchParams]);

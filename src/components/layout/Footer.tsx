@@ -119,6 +119,10 @@ export default function Footer() {
                   <li key={cat.slug}>
                     <Link
                       href={`/?category=${cat.slug}#product-filter`}
+                      scroll={false}
+                      onClick={() => {
+                        sessionStorage.removeItem("lastFilterUrl");
+                      }}
                       className="footer-link"
                       style={{
                         fontFamily: "var(--font-inter), sans-serif",

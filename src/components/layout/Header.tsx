@@ -286,6 +286,10 @@ export default function Header({ products = [] }: { products?: WooProduct[] }) {
                           <Link
                             key={item.name}
                             href={item.href}
+                            scroll={false}
+                            onClick={() => {
+                              sessionStorage.removeItem("lastFilterUrl");
+                            }}
                             style={{
                               display: "block",
                               padding: "10px 18px",
