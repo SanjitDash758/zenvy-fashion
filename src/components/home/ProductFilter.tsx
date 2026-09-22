@@ -597,7 +597,7 @@ export default function ProductFilter({ products }: ProductFilterProps) {
                     >
                       ৳{priceRange.toLocaleString("bn-BD")}
                     </span>
-                    <span>৳৫০০০</span>
+                    <span>৳{(5000).toLocaleString("bn-BD")}</span>
                   </div>
                   <input
                     type="range"
