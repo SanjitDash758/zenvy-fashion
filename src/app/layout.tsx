@@ -1,3 +1,4 @@
+import { FacebookPixel, PixelPageView } from "next-pixels";
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
@@ -30,6 +31,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <body
         className={`${cormorant.variable} ${inter.variable}`}
+        
         style={{
           fontFamily: "var(--font-inter), sans-serif",
           backgroundColor: "#FFFFFF",
@@ -39,6 +41,8 @@ export default function RootLayout({
         }}
         suppressHydrationWarning
       >
+        <FacebookPixel />
+        <PixelPageView />
         {children}
       </body>
     </html>

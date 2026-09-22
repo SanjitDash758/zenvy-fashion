@@ -1,6 +1,6 @@
 "use client";
-
-import { useState, useMemo } from "react";
+import { fbEvent } from "next-pixels";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -51,6 +51,20 @@ export default function ProductDetailClient({
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
   const [showToast, setShowToast] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined" && product) {
+      fbEvent({
+        eventName: "ViewContent",
+        data: {
+          content_ids: [product.id.toString()],
+          content_name: product.name,
+          content_type: "product",
+          value: parseFloat(product.price) || 0,
+          currency: "BDT",
+        },
+      });
+    }
+  }, [product]);
 
   // Get all images
   const images =
@@ -101,6 +115,24 @@ export default function ProductDetailClient({
   const handleAddToCart = () => {
     if (!selectedVariation) return;
     if (currentStockStatus !== "instock") return;
+    // Meta Pixel Tracking
+    fbEvent({
+      eventName: "AddToCart",
+      data: {
+        content_ids: [product.id.toString()],
+        content_name: product.name,
+        content_type: "product",
+        value: currentPrice * quantity,
+        currency: "BDT",
+        contents: [
+          {
+            id: product.id.toString(),
+            quantity: quantity,
+            item_price: currentPrice,
+          },
+        ],
+      },
+    });
 
     // Build selected attributes object
     const selectedAttributes: { [key: string]: string } = {};

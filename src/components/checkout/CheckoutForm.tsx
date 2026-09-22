@@ -1,6 +1,6 @@
 "use client";
-
-import { useState } from "react";
+import { fbEvent } from "next-pixels";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cartStore";
 import { FiShoppingBag, FiLoader } from "react-icons/fi";
@@ -37,6 +37,21 @@ export default function CheckoutForm() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && items.length > 0) {
+      fbEvent({
+        eventName: "InitiateCheckout",
+        data: {
+          content_ids: items.map((item) => item.productId.toString()),
+          content_type: "product",
+          value: getTotalPrice(),
+          currency: "BDT",
+          num_items: items.length,
+        },
+      });
+    }
+  }, [items]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
