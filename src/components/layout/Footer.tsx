@@ -23,7 +23,6 @@ const shopBy = [
 const getToKnowUs = [
   { name: "About", href: "/about" },
   { name: "Testimonial", href: "/#testimonials" },
-  { name: "Contact", href: "/contact" },
 ];
 
 const supportLinks = [

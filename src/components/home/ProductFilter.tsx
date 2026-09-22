@@ -116,26 +116,41 @@ export default function ProductFilter({ products }: ProductFilterProps) {
     const hasAnyParam =
       categoryParam || colorParam || ageParam || occasionParam || maxPriceParam;
 
-    if (!hasAnyParam) return;
+    // Current full URL (with hash)
+    const currentUrl = window.location.href;
 
-    // Check if this is a page reload using Performance Navigation API
+    // Check last URL from sessionStorage
+    const lastUrl = sessionStorage.getItem("lastFilterUrl");
+
+    // Detect a true browser reload using the Navigation API
     const navEntries = performance.getEntriesByType(
       "navigation",
     ) as PerformanceNavigationTiming[];
     const isReload = navEntries.length > 0 && navEntries[0].type === "reload";
 
+    // CASE 1: Reload → reset filters & clear URL
     if (isReload) {
       setSelectedCategory("all");
       setSelectedColor("");
       setSelectedAge("");
       setSelectedOccasion("all");
       setPriceRange(5000);
+
+      sessionStorage.removeItem("lastFilterUrl");
+
+      // Remove query params but keep the path
       window.history.replaceState(null, "", window.location.pathname);
-      sessionStorage.removeItem("lastAppliedUrl");
+
       return;
     }
 
-    // Fresh navigation — apply filters
+    // CASE 2: No params → nothing to do
+    if (!hasAnyParam) return;
+
+    // CASE 3: Same URL as before (already applied) → do nothing
+    if (lastUrl === currentUrl) return;
+
+    // CASE 4: Fresh navigation with params → apply them
     if (categoryParam) {
       const exists = categories.find((c) => c.slug === categoryParam);
       if (exists) {
@@ -146,20 +161,28 @@ export default function ProductFilter({ products }: ProductFilterProps) {
 
     if (ageParam) {
       const exists = ages.find((a) => a.slug === ageParam);
-      if (exists) setSelectedAge(ageParam);
+      if (exists) {
+        setSelectedAge(ageParam);
+        setOpenSection("age");
+      }
     }
 
     if (occasionParam) {
       const exists = occasions.find((o) => o.slug === occasionParam);
-      if (exists) setSelectedOccasion(occasionParam);
+      if (exists) {
+        setSelectedOccasion(occasionParam);
+        setOpenSection("occasion");
+      }
     }
 
     if (maxPriceParam) {
       setPriceRange(Number(maxPriceParam));
     }
 
-    sessionStorage.setItem("lastAppliedUrl", window.location.href);
+    // Save current URL so we don't re-apply on the next render
+    sessionStorage.setItem("lastFilterUrl", currentUrl);
 
+    // Scroll to filter section
     const scrollTimer = setTimeout(() => {
       const element = document.getElementById("product-filter");
       if (element) {

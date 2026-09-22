@@ -22,6 +22,7 @@ const row2Images = [
 export default function Testimonials() {
   return (
     <section
+      id="testimonials"
       className="testimonials-section"
       style={{
         width: "100%",
