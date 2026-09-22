@@ -228,11 +228,11 @@ export default function ProductFilter({ products }: ProductFilterProps) {
 
     // Filter by age (attributes)
     if (selectedAge) {
-      const ageLabel = ages.find((a) => a.slug === selectedAge)?.name || "";
       result = result.filter((p) =>
         p.attributes.some(
           (attr) =>
-            attr.name === "Age" && attr.options.some((opt) => opt === ageLabel),
+            attr.name === "Age" &&
+            attr.options.some((opt) => opt === selectedAge),
         ),
       );
     }
