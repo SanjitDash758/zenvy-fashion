@@ -1,5 +1,5 @@
 "use client";
-import { fbEvent } from "next-pixels";
+import { usePixel } from "next-pixels";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cartStore";
@@ -23,6 +23,9 @@ export default function CheckoutForm() {
   const getTotalPrice = useCartStore((state) => state.getTotalPrice);
   const clearCart = useCartStore((state) => state.clearCart);
 
+  // ⚠️ Meta Pixel Hook
+  const { track } = usePixel();
+
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -38,9 +41,10 @@ export default function CheckoutForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ⚠️ Meta Pixel - InitiateCheckout Tracking
   useEffect(() => {
     if (typeof window !== "undefined" && items.length > 0) {
-      fbEvent({
+      track({
         eventName: "InitiateCheckout",
         data: {
           content_ids: items.map((item) => item.productId.toString()),
@@ -51,7 +55,7 @@ export default function CheckoutForm() {
         },
       });
     }
-  }, [items]);
+  }, [items, track, getTotalPrice]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,

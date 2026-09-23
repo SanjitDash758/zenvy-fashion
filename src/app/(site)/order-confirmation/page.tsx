@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getOrder } from "@/lib/orders";
+import PurchaseTracker from "@/components/product/PurchaseTracker";
 import {
   FiCheckCircle,
   FiPackage,
@@ -38,6 +39,8 @@ export default async function OrderConfirmationPage({
   });
 
   return (
+    <>
+    <PurchaseTracker order={order} />
     <main className="min-h-screen bg-gradient-to-b from-rose-50/40 to-amber-50/40 py-16">
       <div className="container mx-auto px-4 max-w-3xl">
         {/* Success Header */}
@@ -244,6 +247,7 @@ export default async function OrderConfirmationPage({
           </Link>
         </div>
       </div>
-    </main>
+      </main>
+      </>
   );
 }
