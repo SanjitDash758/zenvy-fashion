@@ -41,5 +41,5 @@ export default function PurchaseTracker({ order }: PurchaseTrackerProps) {
     }
   }, [order, track]);
 
-  return null; // কিছুই রেন্ডার করে না — শুধু Pixel ট্র্যাক করে
+  return null;
 }

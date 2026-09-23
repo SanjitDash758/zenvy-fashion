@@ -1,6 +1,7 @@
 "use client";
 import { usePixel } from "next-pixels";
 import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -14,6 +15,7 @@ import {
   FiMinus,
   FiPlus,
   FiCheck,
+  FiZap,
 } from "react-icons/fi";
 import { WooProduct } from "@/lib/api";
 import { useCartStore } from "@/store/cartStore";
@@ -45,6 +47,9 @@ export default function ProductDetailClient({
   // ⚠️ Meta Pixel Hook
   const { track } = usePixel();
 
+  // ⚠️ Router for Buy Now
+  const router = useRouter();
+
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariation, setSelectedVariation] = useState<Variation | null>(
     variations[0] || null,
@@ -54,6 +59,7 @@ export default function ProductDetailClient({
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("কার্টে যোগ হয়েছে!");
 
   // ⚠️ Meta Pixel - ViewContent Tracking
   useEffect(() => {
@@ -117,28 +123,10 @@ export default function ProductDetailClient({
     (attr) => attr.name === "Age",
   )?.option;
 
-  const handleAddToCart = () => {
-    if (!selectedVariation) return;
-    if (currentStockStatus !== "instock") return;
-
-    // ⚠️ Meta Pixel - AddToCart Tracking
-    track({
-      eventName: "AddToCart",
-      data: {
-        content_ids: [product.id.toString()],
-        content_name: product.name,
-        content_type: "product",
-        value: currentPrice * quantity,
-        currency: "BDT",
-        contents: [
-          {
-            id: product.id.toString(),
-            quantity: quantity,
-            item_price: currentPrice,
-          },
-        ],
-      },
-    });
+  // ===== Shared helper: Add item to cart =====
+  const addToCartInternal = (): boolean => {
+    if (!selectedVariation) return false;
+    if (currentStockStatus !== "instock") return false;
 
     // Build selected attributes object
     const selectedAttributes: { [key: string]: string } = {};
@@ -161,9 +149,67 @@ export default function ProductDetailClient({
       selectedAttributes,
     });
 
-    // Show toast
+    return true;
+  };
+
+  // ===== 🛒 Add to Cart Only =====
+  const handleAddToCart = () => {
+    if (!addToCartInternal()) return;
+
+    // ⚠️ Meta Pixel - AddToCart Tracking
+    track({
+      eventName: "AddToCart",
+      data: {
+        content_ids: [product.id.toString()],
+        content_name: product.name,
+        content_type: "product",
+        value: currentPrice * quantity,
+        currency: "BDT",
+        contents: [
+          {
+            id: product.id.toString(),
+            quantity: quantity,
+            item_price: currentPrice,
+          },
+        ],
+      },
+    });
+
+    setToastMessage("কার্টে যোগ হয়েছে!");
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2500);
+  };
+
+  // ===== ⚡ Buy Now — Add to Cart + Redirect to Checkout =====
+  const handleBuyNow = () => {
+    if (!addToCartInternal()) return;
+
+    // ⚠️ Meta Pixel - AddToCart Tracking (also fires on Buy Now)
+    track({
+      eventName: "AddToCart",
+      data: {
+        content_ids: [product.id.toString()],
+        content_name: product.name,
+        content_type: "product",
+        value: currentPrice * quantity,
+        currency: "BDT",
+        contents: [
+          {
+            id: product.id.toString(),
+            quantity: quantity,
+            item_price: currentPrice,
+          },
+        ],
+      },
+    });
+
+    setToastMessage("কার্টে যোগ হয়েছে — চেকআউটে নিয়ে যাচ্ছি...");
+    setShowToast(true);
+
+    setTimeout(() => {
+      setShowToast(false);
+      router.push("/checkout");
+    }, 1200);
   };
 
   return (
@@ -497,7 +543,7 @@ export default function ProductDetailClient({
               </div>
             )}
 
-            {/* Quantity + Add to Cart + Size Guide + Wishlist */}
+            {/* ===== Quantity + Add to Cart + Buy Now + Size Guide + Wishlist ===== */}
             <div
               style={{
                 display: "flex",
@@ -563,19 +609,69 @@ export default function ProductDetailClient({
                 </button>
               </div>
 
-              {/* Add to Cart — Smaller */}
+              {/* ===== Add to Cart Button ===== */}
               <button
                 onClick={handleAddToCart}
                 disabled={currentStockStatus !== "instock"}
                 style={{
                   flex: "1 1 auto",
-                  minWidth: "130px",
+                  minWidth: "120px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "6px",
                   height: "52px",
-                  padding: "0 18px",
+                  padding: "0 16px",
+                  backgroundColor: "transparent",
+                  color:
+                    currentStockStatus === "instock" ? "#FF6B8A" : "#CCCCCC",
+                  fontFamily: "var(--font-inter), sans-serif",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  border: `1.5px solid ${
+                    currentStockStatus === "instock" ? "#FF6B8A" : "#CCCCCC"
+                  }`,
+                  borderRadius: "12px",
+                  cursor:
+                    currentStockStatus === "instock"
+                      ? "pointer"
+                      : "not-allowed",
+                  transition: "all 0.3s ease",
+                  letterSpacing: "0.3px",
+                  whiteSpace: "nowrap",
+                }}
+                onMouseEnter={(e) => {
+                  if (currentStockStatus === "instock") {
+                    e.currentTarget.style.backgroundColor = "#FF6B8A";
+                    e.currentTarget.style.color = "#FFFFFF";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (currentStockStatus === "instock") {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                    e.currentTarget.style.color = "#FF6B8A";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }
+                }}
+              >
+                <FiShoppingBag size={15} strokeWidth={2.2} />
+                কার্টে যোগ
+              </button>
+
+              {/* ===== ⚡ Buy Now Button ===== */}
+              <button
+                onClick={handleBuyNow}
+                disabled={currentStockStatus !== "instock"}
+                style={{
+                  flex: "1 1 auto",
+                  minWidth: "120px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  height: "52px",
+                  padding: "0 16px",
                   backgroundColor:
                     currentStockStatus === "instock" ? "#FF6B8A" : "#CCCCCC",
                   color: "#FFFFFF",
@@ -609,11 +705,11 @@ export default function ProductDetailClient({
                   }
                 }}
               >
-                <FiShoppingBag size={16} strokeWidth={2.2} />
-                কার্টে যোগ
+                <FiZap size={15} strokeWidth={2.2} />
+                কিনুন
               </button>
 
-              {/* Size Guide Button */}
+              {/* ===== Size Guide Button ===== */}
               <button
                 onClick={() => setSizeGuideOpen(true)}
                 style={{
@@ -622,7 +718,7 @@ export default function ProductDetailClient({
                   justifyContent: "center",
                   gap: "6px",
                   height: "52px",
-                  padding: "0 18px",
+                  padding: "0 16px",
                   backgroundColor: "#FFFFFF",
                   color: "#FF6B8A",
                   fontFamily: "var(--font-inter), sans-serif",
@@ -646,7 +742,7 @@ export default function ProductDetailClient({
                 📏 সাইজ দেখুন
               </button>
 
-              {/* Wishlist */}
+              {/* ===== Wishlist Button ===== */}
               <button
                 onClick={() => setIsWishlisted(!isWishlisted)}
                 aria-label="Wishlist"
@@ -810,7 +906,7 @@ export default function ProductDetailClient({
           }}
         >
           <FiCheck size={20} strokeWidth={3} />
-          কার্টে যোগ হয়েছে!
+          {toastMessage}
         </div>
       )}
 
