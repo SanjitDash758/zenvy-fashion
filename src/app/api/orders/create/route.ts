@@ -22,6 +22,8 @@ interface CheckoutPayload {
     note?: string;
   };
   paymentMethod: "cod" | "bkash";
+  shippingCharge?: number;
+  shippingZone?: "inside" | "outside";
   items: CartItem[];
 }
 
@@ -52,7 +54,21 @@ export async function POST(request: NextRequest) {
     const paymentMethodTitle =
       body.paymentMethod === "cod" ? "Cash on Delivery" : "bKash (Manual)";
 
-    // ===== 3. Build billing object (conditionally) =====
+    // ===== 3. Shipping zone & charge =====
+    const shippingZone: "inside" | "outside" =
+      body.shippingZone === "outside" ? "outside" : "inside";
+
+    const shippingCharge =
+      typeof body.shippingCharge === "number" && body.shippingCharge >= 0
+        ? body.shippingCharge
+        : shippingZone === "inside"
+          ? 70
+          : 130;
+
+    const shippingMethodTitle =
+      shippingZone === "inside" ? "Inside Dhaka" : "Outside Dhaka";
+
+    // ===== 4. Build billing object (conditionally) =====
     const billing: any = {
       first_name: body.customer.firstName,
       last_name: body.customer.lastName || "",
@@ -73,7 +89,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ===== 4. Build shipping object =====
+    // ===== 5. Build shipping object =====
     const shipping: any = {
       first_name: body.customer.firstName,
       last_name: body.customer.lastName || "",
@@ -86,7 +102,7 @@ export async function POST(request: NextRequest) {
       shipping.postcode = body.customer.postcode;
     }
 
-    // ===== 5. Build WooCommerce order payload =====
+    // ===== 6. Build WooCommerce order payload =====
     const orderPayload: CreateOrderPayload = {
       payment_method: body.paymentMethod,
       payment_method_title: paymentMethodTitle,
@@ -103,10 +119,18 @@ export async function POST(request: NextRequest) {
       meta_data: [
         { key: "_payment_method_label", value: paymentMethodTitle },
         { key: "_order_source", value: "Next.js Website" },
+        { key: "_shipping_zone", value: shippingZone },
+      ],
+      shipping_lines: [
+        {
+          method_id: "flat_rate",
+          method_title: shippingMethodTitle,
+          total: String(shippingCharge),
+        },
       ],
     };
 
-    // ===== 6. Send to WooCommerce =====
+    // ===== 7. Send to WooCommerce =====
     const order = await createOrder(orderPayload);
 
     if (!order) {
@@ -116,7 +140,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ===== 7. Send Telegram notification (non-blocking) =====
+    // ===== 8. Send Telegram notification (non-blocking) =====
     const telegramMessage = formatOrderMessage({
       orderId: order.id,
       orderNumber: order.number,
@@ -141,7 +165,7 @@ export async function POST(request: NextRequest) {
       console.error("Telegram notification error:", err),
     );
 
-    // ===== 8. Success response =====
+    // ===== 9. Success response =====
     return NextResponse.json(
       {
         success: true,
@@ -149,6 +173,8 @@ export async function POST(request: NextRequest) {
         orderNumber: order.number,
         total: order.total,
         status: order.status,
+        shippingCharge,
+        shippingZone,
       },
       { status: 201 },
     );
