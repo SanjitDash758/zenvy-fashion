@@ -189,16 +189,30 @@ export default async function OrderConfirmationPage({
             </div>
           </div>
 
-          {/* Total */}
-          <div className="p-6 bg-rose-50/50">
-            <div className="flex items-center justify-between">
-              <span className="text-lg font-semibold text-gray-700">মোট</span>
-              <span className="text-2xl font-bold text-rose-600">
-                ৳{parseFloat(order.total).toLocaleString("bn-BD")}
-              </span>
-            </div>
-          </div>
-        </div>
+          {/* Totals */}
+<div className="p-6 bg-slate-50/60 space-y-2">
+  <div className="flex justify-between text-sm text-slate-600">
+    <span>সাবটোটাল</span>
+    <span>৳{parseFloat(order.subtotal).toLocaleString("bn-BD")}</span>
+  </div>
+  
+  {/* ⚠️ Shipping Charge */}
+  {order.shipping_lines && order.shipping_lines.length > 0 && (
+    <div className="flex justify-between text-sm text-slate-600">
+      <span>ডেলিভারি চার্জ</span>
+      <span>
+        ৳{parseFloat(order.shipping_lines[0].total).toLocaleString("bn-BD")}
+      </span>
+    </div>
+  )}
+  
+  <div className="flex justify-between items-center pt-3 border-t border-slate-200 mt-3">
+    <span className="font-bold text-slate-900">মোট</span>
+    <span className="text-2xl font-black text-indigo-600">
+      ৳{parseFloat(order.total).toLocaleString("bn-BD")}
+    </span>
+  </div>
+</div>
 
         {/* Contact Info */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-rose-100 mb-6">
