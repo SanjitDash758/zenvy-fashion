@@ -19,26 +19,38 @@ export default function PurchaseTracker({ order }: PurchaseTrackerProps) {
   const { track } = usePixel();
 
   useEffect(() => {
-    if (typeof window !== "undefined" && order) {
-      track({
-        eventName: "Purchase",
-        data: {
-          content_ids: order.line_items.map((item) =>
-            item.product_id.toString(),
-          ),
-          content_type: "product",
-          value: parseFloat(order.total),
-          currency: "BDT",
-          num_items: order.line_items.length,
-          order_id: order.id.toString(),
-          contents: order.line_items.map((item) => ({
-            id: item.product_id.toString(),
-            quantity: item.quantity,
-            item_price: item.price,
-          })),
-        },
-      });
+    if (!order) return;
+
+    const storageKey = `meta_purchase_tracked_${order.id}`;
+
+    // Prevent the same order from firing Purchase again
+    if (sessionStorage.getItem(storageKey)) {
+      console.log(
+        `[Meta] Purchase already tracked for order ${order.id}`,
+      );
+      return;
     }
+
+    track({
+      eventName: "Purchase",
+      data: {
+        content_ids: order.line_items.map((item) =>
+          item.product_id.toString(),
+        ),
+        content_type: "product",
+        value: parseFloat(order.total),
+        currency: "BDT",
+        num_items: order.line_items.length,
+        order_id: order.id.toString(),
+        contents: order.line_items.map((item) => ({
+          id: item.product_id.toString(),
+          quantity: item.quantity,
+          item_price: item.price,
+        })),
+      },
+    });
+
+    console.log(`[Meta] Purchase tracked for order ${order.id}`);
   }, [order, track]);
 
   return null;
