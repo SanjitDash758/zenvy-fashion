@@ -1,4 +1,5 @@
 "use client";
+
 import { usePixel } from "next-pixels";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -23,7 +24,6 @@ export default function CheckoutForm() {
   const getTotalPrice = useCartStore((state) => state.getTotalPrice);
   const clearCart = useCartStore((state) => state.clearCart);
 
-  // ⚠️ Meta Pixel Hook
   const { track } = usePixel();
 
   const [formData, setFormData] = useState<FormData>({
@@ -38,10 +38,10 @@ export default function CheckoutForm() {
     paymentMethod: "cod",
   });
 
-  // ⚠️ Shipping State
   const [shippingZone, setShippingZone] = useState<"inside" | "outside">(
     "inside",
   );
+
   const shippingCharge = shippingZone === "inside" ? 70 : 130;
   const subtotal = getTotalPrice();
   const grandTotal = subtotal + shippingCharge;
@@ -49,22 +49,52 @@ export default function CheckoutForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ⚠️ Meta Pixel - InitiateCheckout Tracking
+  // Meta Pixel - InitiateCheckout Tracking
   useEffect(() => {
-    if (typeof window !== "undefined" && items.length > 0) {
-      track({
-        eventName: "InitiateCheckout",
-        data: {
-          content_ids: items.map((item) => item.productId.toString()),
-          content_type: "product",
-          value: grandTotal,
-          currency: "BDT",
-          num_items: items.length,
-        },
-      });
+    if (typeof window === "undefined" || items.length === 0) {
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, track]);
+
+    /*
+     * Create a stable identifier for this checkout/cart.
+     * React re-renders will not create another InitiateCheckout
+     * for the same cart during the current browser session.
+     */
+    const cartSignature = items
+      .map(
+        (item) =>
+          `${item.productId}:${item.variationId ?? 0}:${item.quantity}`,
+      )
+      .sort()
+      .join("|");
+
+    const storageKey = `meta_initiate_checkout_${cartSignature}`;
+
+    if (sessionStorage.getItem(storageKey)) {
+      console.log(
+        "[Meta] InitiateCheckout already tracked for this cart",
+      );
+      return;
+    }
+
+    sessionStorage.setItem(storageKey, "true");
+
+    track({
+      eventName: "InitiateCheckout",
+      data: {
+        content_ids: items.map((item) => item.productId.toString()),
+        content_type: "product",
+        value: grandTotal,
+        currency: "BDT",
+        num_items: items.reduce(
+          (total, item) => total + item.quantity,
+          0,
+        ),
+      },
+    });
+
+    console.log("[Meta] InitiateCheckout tracked");
+  }, [items, track, grandTotal]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -81,18 +111,22 @@ export default function CheckoutForm() {
       setError("নাম আবশ্যক");
       return;
     }
+
     if (!formData.phone.trim() || formData.phone.length < 11) {
       setError("সঠিক ফোন নম্বর দিন (১১ ডিজিট)");
       return;
     }
+
     if (!formData.address.trim()) {
       setError("ঠিকানা আবশ্যক");
       return;
     }
+
     if (!formData.city.trim()) {
       setError("শহর আবশ্যক");
       return;
     }
+
     if (items.length === 0) {
       setError("কার্ট খালি");
       return;
@@ -113,8 +147,8 @@ export default function CheckoutForm() {
           note: formData.note,
         },
         paymentMethod: formData.paymentMethod,
-        shippingCharge: shippingCharge, // ← নতুন
-        shippingZone: shippingZone, // ← নতুন
+        shippingCharge: shippingCharge,
+        shippingZone: shippingZone,
         items: items.map((item) => ({
           productId: item.productId,
           variationId: item.variationId,
@@ -152,7 +186,9 @@ export default function CheckoutForm() {
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Customer Info */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">কাস্টমার তথ্য</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">
+          কাস্টমার তথ্য
+        </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -237,6 +273,7 @@ export default function CheckoutForm() {
               value={formData.city}
               onChange={(e) => {
                 handleChange(e);
+
                 if (e.target.value === "Dhaka") {
                   setShippingZone("inside");
                 } else {
@@ -290,12 +327,17 @@ export default function CheckoutForm() {
 
       {/* Payment Method */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">পেমেন্ট পদ্ধতি</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">
+          পেমেন্ট পদ্ধতি
+        </h2>
 
         <div className="flex items-start gap-3 p-4 rounded-xl border-2 border-rose-400 bg-rose-50">
           <div className="w-5 h-5 rounded-full border-4 border-rose-500 flex-shrink-0 mt-0.5" />
+
           <div>
-            <p className="font-semibold text-gray-900">ক্যাশ অন ডেলিভারি</p>
+            <p className="font-semibold text-gray-900">
+              ক্যাশ অন ডেলিভারি
+            </p>
             <p className="text-sm text-gray-600 mt-1">
               পণ্য হাতে পেয়ে টাকা পরিশোধ করুন
             </p>
@@ -312,23 +354,32 @@ export default function CheckoutForm() {
 
       {/* Order Summary & Submit */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
-        {/* ⚠️ Order Summary */}
         <div className="space-y-2 mb-4">
           <div className="flex justify-between text-sm text-gray-600">
             <span>সাবটোটাল</span>
             <span>৳ {subtotal.toLocaleString("bn-BD")}</span>
           </div>
+
           <div className="flex justify-between text-sm text-gray-600">
             <span>
               ডেলিভারি চার্জ{" "}
               <span className="text-xs text-gray-400">
-                ({shippingZone === "inside" ? "ঢাকার ভিতরে" : "ঢাকার বাইরে"})
+                (
+                {shippingZone === "inside"
+                  ? "ঢাকার ভিতরে"
+                  : "ঢাকার বাইরে"}
+                )
               </span>
             </span>
-            <span>৳ {shippingCharge.toLocaleString("bn-BD")}</span>
+
+            <span>
+              ৳ {shippingCharge.toLocaleString("bn-BD")}
+            </span>
           </div>
+
           <div className="flex justify-between items-center pt-3 border-t border-gray-200 mt-3">
             <span className="font-bold text-gray-900">মোট</span>
+
             <span className="text-2xl font-bold text-rose-600">
               ৳ {grandTotal.toLocaleString("bn-BD")}
             </span>
