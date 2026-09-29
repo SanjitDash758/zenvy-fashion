@@ -23,13 +23,11 @@ export default function PurchaseTracker({ order }: PurchaseTrackerProps) {
 
     const storageKey = `meta_purchase_tracked_${order.id}`;
 
-    // Prevent the same order from firing Purchase again
-    if (sessionStorage.getItem(storageKey)) {
-      console.log(
-        `[Meta] Purchase already tracked for order ${order.id}`,
-      );
+    if (localStorage.getItem(storageKey)) {
       return;
     }
+
+    localStorage.setItem(storageKey, "true");
 
     track({
       eventName: "Purchase",
@@ -40,7 +38,10 @@ export default function PurchaseTracker({ order }: PurchaseTrackerProps) {
         content_type: "product",
         value: parseFloat(order.total),
         currency: "BDT",
-        num_items: order.line_items.length,
+        num_items: order.line_items.reduce(
+        (total, item) => total + item.quantity,
+        0,
+        ),
         order_id: order.id.toString(),
         contents: order.line_items.map((item) => ({
           id: item.product_id.toString(),
