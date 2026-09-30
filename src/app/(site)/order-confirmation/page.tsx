@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getOrder } from "@/lib/orders";
@@ -38,11 +39,13 @@ export default async function OrderConfirmationPage({
     minute: "2-digit",
   });
 
-  // ⚠️ Shipping line (safe access)
+  // Shipping line (safe access)
   const shippingLine =
     order.shipping_lines && order.shipping_lines.length > 0
       ? order.shipping_lines[0]
       : null;
+
+  const lineItems = order.line_items ?? [];
 
   return (
     <>
@@ -131,7 +134,7 @@ export default async function OrderConfirmationPage({
                     নাম
                   </p>
                   <p className="font-semibold text-gray-900">
-                    {order.billing.first_name} {order.billing.last_name}
+                    {order.billing?.first_name} {order.billing?.last_name}
                   </p>
                 </div>
                 <div>
@@ -139,7 +142,7 @@ export default async function OrderConfirmationPage({
                     মোবাইল
                   </p>
                   <p className="font-semibold text-gray-900">
-                    {order.billing.phone}
+                    {order.billing?.phone}
                   </p>
                 </div>
                 <div className="md:col-span-2">
@@ -147,11 +150,11 @@ export default async function OrderConfirmationPage({
                     ঠিকানা
                   </p>
                   <p className="font-semibold text-gray-900">
-                    {order.billing.address_1}
-                    {order.billing.address_2 &&
+                    {order.billing?.address_1}
+                    {order.billing?.address_2 &&
                       `, ${order.billing.address_2}`}
-                    , {order.billing.city}
-                    {order.billing.postcode && ` - ${order.billing.postcode}`}
+                    {order.billing?.city && `, ${order.billing.city}`}
+                    {order.billing?.postcode && ` - ${order.billing.postcode}`}
                   </p>
                 </div>
               </div>
@@ -163,32 +166,44 @@ export default async function OrderConfirmationPage({
                 অর্ডারকৃত পণ্য
               </h2>
               <div className="space-y-3">
-                {order.line_items.map((item) => (
+                {lineItems.map((item) => (
                   <div
                     key={item.id}
                     className="flex items-center gap-3 pb-3 border-b border-gray-50 last:border-0"
                   >
                     {item.image?.src ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <Image
                         src={item.image.src}
-                        alt={item.name}
+                        alt={item.name || "Product Image"}
+                        width={56}
+                        height={56}
                         className="w-14 h-14 object-cover rounded-lg bg-gray-100"
                       />
                     ) : (
-                      <div className="w-14 h-14 rounded-lg bg-gray-100" />
+                      <div className="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center text-xs text-gray-400">
+                        ছবি নেই
+                      </div>
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 line-clamp-2">
                         {item.name}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        ৳{item.price.toLocaleString("bn-BD")} × {item.quantity}
+                        ৳
+                        {(typeof item.price === "number"
+                          ? item.price
+                          : parseFloat(String(item.price || 0))
+                        ).toLocaleString("bn-BD")}{" "}
+                        × {item.quantity}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-gray-900">
-                        ৳{parseFloat(item.total).toLocaleString("bn-BD")}
+                        ৳
+                        {(typeof item.total === "number"
+                          ? item.total
+                          : parseFloat(String(item.total || 0))
+                        ).toLocaleString("bn-BD")}
                       </p>
                     </div>
                   </div>
@@ -203,12 +218,12 @@ export default async function OrderConfirmationPage({
                 <span>
                   ৳
                   {parseFloat(
-                    String(order.subtotal || "0"),
+                    String(order.subtotal || "0")
                   ).toLocaleString("bn-BD")}
                 </span>
               </div>
 
-              {/* ⚠️ Shipping Charge */}
+              {/* Shipping Charge */}
               {shippingLine && (
                 <div className="flex justify-between text-sm text-slate-600">
                   <span>
@@ -222,7 +237,7 @@ export default async function OrderConfirmationPage({
                   <span>
                     ৳
                     {parseFloat(
-                      String(shippingLine.total || "0"),
+                      String(shippingLine.total || "0")
                     ).toLocaleString("bn-BD")}
                   </span>
                 </div>
@@ -233,7 +248,7 @@ export default async function OrderConfirmationPage({
                 <span className="text-2xl font-black text-indigo-600">
                   ৳
                   {parseFloat(String(order.total || "0")).toLocaleString(
-                    "bn-BD",
+                    "bn-BD"
                   )}
                 </span>
               </div>
@@ -272,7 +287,7 @@ export default async function OrderConfirmationPage({
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-3 justify-center">
             <Link
-              href={`/track-order?order=${order.number}&phone=${order.billing.phone}`}
+              href={`/track-order?order=${order.number}&phone=${order.billing?.phone}`}
               className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-500 to-rose-600 text-white font-bold px-6 py-3.5 rounded-xl hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-rose-500/30"
             >
               <FiPackage size={18} />
