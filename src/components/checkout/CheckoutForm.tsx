@@ -1,7 +1,7 @@
 "use client";
 
 import { usePixel } from "next-pixels";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cartStore";
 import { FiShoppingBag, FiLoader } from "react-icons/fi";
@@ -25,6 +25,7 @@ export default function CheckoutForm() {
   const clearCart = useCartStore((state) => state.clearCart);
 
   const { track } = usePixel();
+  const hasTrackedCheckout = useRef(false);
 
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
@@ -49,17 +50,16 @@ export default function CheckoutForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Meta Pixel - InitiateCheckout Tracking
+  // Meta Pixel - Deduplicated InitiateCheckout Tracking
   useEffect(() => {
-    if (typeof window === "undefined" || items.length === 0) {
+    if (
+      typeof window === "undefined" ||
+      items.length === 0 ||
+      hasTrackedCheckout.current
+    ) {
       return;
     }
 
-    /*
-     * Create a stable identifier for this checkout/cart.
-     * React re-renders will not create another InitiateCheckout
-     * for the same cart during the current browser session.
-     */
     const cartSignature = items
       .map(
         (item) =>
@@ -71,12 +71,14 @@ export default function CheckoutForm() {
     const storageKey = `meta_initiate_checkout_${cartSignature}`;
 
     if (sessionStorage.getItem(storageKey)) {
+      hasTrackedCheckout.current = true;
       console.log(
-        "[Meta] InitiateCheckout already tracked for this cart",
+        "[Meta] InitiateCheckout already tracked for this session cart",
       );
       return;
     }
 
+    hasTrackedCheckout.current = true;
     sessionStorage.setItem(storageKey, "true");
 
     track({
@@ -93,8 +95,8 @@ export default function CheckoutForm() {
       },
     });
 
-    console.log("[Meta] InitiateCheckout tracked");
-  }, [items, track, grandTotal]);
+    console.log("[Meta] InitiateCheckout tracked successfully");
+  }, [items, track]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
