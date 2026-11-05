@@ -1,3 +1,5 @@
+"use client"
+
 import { getAllOrders, WooOrder } from "./orders";
 
 export interface DashboardStats {

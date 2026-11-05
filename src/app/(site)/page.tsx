@@ -8,7 +8,7 @@ import WhyZenvyFashion from "@/components/home/WhyZenvyFashion";
 import Testimonials from "@/components/home/Testimonials";
 import { getProducts, getFeaturedProducts, getPujaCollectionProducts } from "@/lib/api";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 async function HeroSectionWrapper() {
   const featuredProducts = await getFeaturedProducts(5);

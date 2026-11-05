@@ -2,7 +2,7 @@ import { fetchAllOrdersForStats } from "@/lib/dashboard";
 import { buildCustomersFromOrders } from "@/lib/customers";
 import CustomersContent from "./CustomersContent";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export default async function AdminCustomersPage() {
   const orders = await fetchAllOrdersForStats();

@@ -1,3 +1,4 @@
+"use client"
 import { cookies } from "next/headers";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";

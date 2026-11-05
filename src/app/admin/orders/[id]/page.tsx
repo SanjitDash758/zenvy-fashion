@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getOrder, getOrderNotes } from "@/lib/orders";
 import OrderDetailContent from "./OrderDetailContent";
 
-export const revalidate = 30;
+export const revalidate = 3600;
 
 interface OrderDetailPageProps {
   params: Promise<{ id: string }>;
