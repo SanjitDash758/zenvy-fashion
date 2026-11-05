@@ -44,16 +44,36 @@ export interface OrderShipping {
   country: string;
 }
 
+// ⚠️ Shipping line (WooCommerce returns this in response)
+export interface OrderShippingLine {
+  id: number;
+  method_id: string;
+  method_title: string;
+  total: string;
+  total_tax?: string;
+  taxes?: any[];
+  meta_data?: Array<{ id: number; key: string; value: any }>;
+}
+
 export interface CreateOrderPayload {
   payment_method: string;
   payment_method_title: string;
   set_paid: boolean;
-  status?: string;
-  billing: OrderBilling;
-  shipping: OrderShipping;
-  line_items: OrderLineItem[];
+  status: string;
+  billing: any;
+  shipping: any;
+  line_items: Array<{
+    product_id: number;
+    variation_id?: number;
+    quantity: number;
+  }>;
   customer_note?: string;
-  meta_data?: Array<{ key: string; value: string }>;
+  meta_data?: Array<{ key: string; value: any }>;
+  shipping_lines?: Array<{
+    method_id: string;
+    method_title: string;
+    total: string;
+  }>;
 }
 
 export interface WooOrder {
@@ -85,6 +105,8 @@ export interface WooOrder {
     total: string;
     image?: { src: string };
   }>;
+  // ⚠️ নতুন যোগ করা হলো — order-confirmation পেজে দরকার
+  shipping_lines?: OrderShippingLine[];
   meta_data: Array<{ id: number; key: string; value: any }>;
 }
 
@@ -170,6 +192,7 @@ export async function updateOrderStatus(
     return null;
   }
 }
+
 // ===== Fetch order notes (status change history) =====
 export interface OrderNote {
   id: number;

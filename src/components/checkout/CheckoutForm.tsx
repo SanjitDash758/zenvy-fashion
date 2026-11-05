@@ -1,6 +1,7 @@
 "use client";
+
 import { usePixel } from "next-pixels";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cartStore";
 import { FiShoppingBag, FiLoader } from "react-icons/fi";
@@ -23,8 +24,8 @@ export default function CheckoutForm() {
   const getTotalPrice = useCartStore((state) => state.getTotalPrice);
   const clearCart = useCartStore((state) => state.clearCart);
 
-  // ⚠️ Meta Pixel Hook
   const { track } = usePixel();
+  const hasTrackedCheckout = useRef(false);
 
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
@@ -38,24 +39,64 @@ export default function CheckoutForm() {
     paymentMethod: "cod",
   });
 
+  const [shippingZone, setShippingZone] = useState<"inside" | "outside">(
+    "inside",
+  );
+
+  const shippingCharge = shippingZone === "inside" ? 70 : 130;
+  const subtotal = getTotalPrice();
+  const grandTotal = subtotal + shippingCharge;
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ⚠️ Meta Pixel - InitiateCheckout Tracking
+  // Meta Pixel - Deduplicated InitiateCheckout Tracking
   useEffect(() => {
-    if (typeof window !== "undefined" && items.length > 0) {
-      track({
-        eventName: "InitiateCheckout",
-        data: {
-          content_ids: items.map((item) => item.productId.toString()),
-          content_type: "product",
-          value: getTotalPrice(),
-          currency: "BDT",
-          num_items: items.length,
-        },
-      });
+    if (
+      typeof window === "undefined" ||
+      items.length === 0 ||
+      hasTrackedCheckout.current
+    ) {
+      return;
     }
-  }, [items, track, getTotalPrice]);
+
+    const cartSignature = items
+      .map(
+        (item) =>
+          `${item.productId}:${item.variationId ?? 0}:${item.quantity}`,
+      )
+      .sort()
+      .join("|");
+
+    const storageKey = `meta_initiate_checkout_${cartSignature}`;
+
+    if (sessionStorage.getItem(storageKey)) {
+      hasTrackedCheckout.current = true;
+      console.log(
+        "[Meta] InitiateCheckout already tracked for this session cart",
+      );
+      return;
+    }
+
+    hasTrackedCheckout.current = true;
+    sessionStorage.setItem(storageKey, "true");
+
+    track({
+      eventName: "InitiateCheckout",
+      data: {
+        content_ids: items.map((item) => item.productId.toString()),
+        content_type: "product",
+        value: grandTotal,
+        currency: "BDT",
+        num_items: items.reduce(
+          (total, item) => total + item.quantity,
+          0,
+        ),
+      },
+    });
+
+    console.log("[Meta] InitiateCheckout tracked successfully");
+  }, [items, track]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -72,18 +113,22 @@ export default function CheckoutForm() {
       setError("নাম আবশ্যক");
       return;
     }
+
     if (!formData.phone.trim() || formData.phone.length < 11) {
       setError("সঠিক ফোন নম্বর দিন (১১ ডিজিট)");
       return;
     }
+
     if (!formData.address.trim()) {
       setError("ঠিকানা আবশ্যক");
       return;
     }
+
     if (!formData.city.trim()) {
       setError("শহর আবশ্যক");
       return;
     }
+
     if (items.length === 0) {
       setError("কার্ট খালি");
       return;
@@ -104,6 +149,8 @@ export default function CheckoutForm() {
           note: formData.note,
         },
         paymentMethod: formData.paymentMethod,
+        shippingCharge: shippingCharge,
+        shippingZone: shippingZone,
         items: items.map((item) => ({
           productId: item.productId,
           variationId: item.variationId,
@@ -137,13 +184,13 @@ export default function CheckoutForm() {
     }
   };
 
-  const total = getTotalPrice();
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Customer Info */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">কাস্টমার তথ্য</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">
+          কাস্টমার তথ্য
+        </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -223,15 +270,31 @@ export default function CheckoutForm() {
             <label className="block text-sm font-semibold text-gray-700 mb-1">
               শহর <span className="text-rose-500">*</span>
             </label>
-            <input
-              type="text"
+            <select
               name="city"
               value={formData.city}
-              onChange={handleChange}
+              onChange={(e) => {
+                handleChange(e);
+
+                if (e.target.value === "Dhaka") {
+                  setShippingZone("inside");
+                } else {
+                  setShippingZone("outside");
+                }
+              }}
               required
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-rose-400 focus:outline-none"
-              placeholder="ঢাকা"
-            />
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-rose-400 focus:outline-none bg-white"
+            >
+              <option value="">শহর সিলেক্ট করুন</option>
+              <option value="Dhaka">ঢাকা</option>
+              <option value="Chattogram">চট্টগ্রাম</option>
+              <option value="Khulna">খুলনা</option>
+              <option value="Rajshahi">রাজশাহী</option>
+              <option value="Sylhet">সিলেট</option>
+              <option value="Barishal">বরিশাল</option>
+              <option value="Rangpur">রংপুর</option>
+              <option value="Mymensingh">ময়মনসিংহ</option>
+            </select>
           </div>
 
           <div>
@@ -266,12 +329,17 @@ export default function CheckoutForm() {
 
       {/* Payment Method */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">পেমেন্ট পদ্ধতি</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">
+          পেমেন্ট পদ্ধতি
+        </h2>
 
         <div className="flex items-start gap-3 p-4 rounded-xl border-2 border-rose-400 bg-rose-50">
           <div className="w-5 h-5 rounded-full border-4 border-rose-500 flex-shrink-0 mt-0.5" />
+
           <div>
-            <p className="font-semibold text-gray-900">ক্যাশ অন ডেলিভারি</p>
+            <p className="font-semibold text-gray-900">
+              ক্যাশ অন ডেলিভারি
+            </p>
             <p className="text-sm text-gray-600 mt-1">
               পণ্য হাতে পেয়ে টাকা পরিশোধ করুন
             </p>
@@ -286,13 +354,38 @@ export default function CheckoutForm() {
         </div>
       )}
 
-      {/* Total & Submit */}
+      {/* Order Summary & Submit */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-gray-700 font-medium">মোট</span>
-          <span className="text-2xl font-bold text-gray-900">
-            ৳ {total.toLocaleString("bn-BD")}
-          </span>
+        <div className="space-y-2 mb-4">
+          <div className="flex justify-between text-sm text-gray-600">
+            <span>সাবটোটাল</span>
+            <span>৳ {subtotal.toLocaleString("bn-BD")}</span>
+          </div>
+
+          <div className="flex justify-between text-sm text-gray-600">
+            <span>
+              ডেলিভারি চার্জ{" "}
+              <span className="text-xs text-gray-400">
+                (
+                {shippingZone === "inside"
+                  ? "ঢাকার ভিতরে"
+                  : "ঢাকার বাইরে"}
+                )
+              </span>
+            </span>
+
+            <span>
+              ৳ {shippingCharge.toLocaleString("bn-BD")}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center pt-3 border-t border-gray-200 mt-3">
+            <span className="font-bold text-gray-900">মোট</span>
+
+            <span className="text-2xl font-bold text-rose-600">
+              ৳ {grandTotal.toLocaleString("bn-BD")}
+            </span>
+          </div>
         </div>
 
         <button
